@@ -9,10 +9,10 @@ android {
 
     defaultConfig {
         applicationId = "com.cobrasize.app"
-        minSdk = 26
+        minSdk = 21
         targetSdk = 34
-        versionCode = 8
-        versionName = "1.0.6"
+        versionCode = 9
+        versionName = "1.0.7"
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
