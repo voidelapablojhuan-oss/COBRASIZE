@@ -38,7 +38,10 @@ class MainActivity : Activity() {
                     else this@MainActivity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 }
                 val intent = Intent(this@MainActivity, ActiveService::class.java)
-                if (on) {\n                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent)\n                    else startService(intent)\n                } else stopService(intent)
+                if (on) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent)
+                    else startService(intent)
+                } else stopService(intent)
             } catch (e: Exception) {
             }
         }
