@@ -118,7 +118,7 @@
         <div>
           <div class="flex items-center gap-2">
             <h1 class="text-2xl font-extrabold tracking-tight text-white">COBRASIZE</h1>
-            <span class="bg-green-500/20 text-green-400 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-green-500/30">v1.0.5</span>
+            <span class="bg-green-500/20 text-green-400 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-green-500/30">v1.0.6</span>
           </div>
           <p class="text-xs text-gray-400 mt-0.5">Ferramentas e perfis personalizados para Free Fire</p>
         </div>
@@ -381,6 +381,13 @@
           <p class="font-bold text-gray-300">ℹ️ Detalhes do Diagnóstico Real:</p>
           <p id="scan-details-text">Clique no botão re-escanear para recalcular o tempo de transmissão de resposta.</p>
         </div>
+        <div class="bg-gray-950 border border-blue-500/20 rounded-xl p-4 space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <b class="text-sm text-blue-300">🩺 Diagnóstico express</b>
+            <button onclick="runQuickDiagnostic()" class="text-xs font-bold bg-blue-500/15 text-blue-300 border border-blue-500/30 px-3 py-2 rounded-lg">ANALISAR</button>
+          </div>
+          <p id="scan-advice" class="text-xs text-gray-400">Gere uma análise para receber recomendações de estabilidade com base nos dados disponíveis.</p>
+        </div>
       </div>
     </section>
 
@@ -498,6 +505,44 @@
           <div id="ff-performance-values" class="text-sm text-white space-y-2"></div>
           <p id="ff-performance-note" class="text-xs text-gray-400"></p>
           <button onclick="copyFFPerformance()" class="w-full bg-gray-800 hover:bg-gray-700 text-green-300 font-bold py-2.5 rounded-xl">📋 Copiar perfil</button>
+        </div>
+      </div>
+
+      <div class="bg-gray-900/90 border border-blue-500/30 p-5 rounded-2xl space-y-4">
+        <div>
+          <h2 class="text-lg font-extrabold text-white">🧠 Otimizador inteligente</h2>
+          <p class="text-xs text-gray-400 mt-1">Analisa os dados que o aparelho disponibiliza e sugere um perfil inicial. Nada é alterado automaticamente.</p>
+        </div>
+        <button id="btn-smart-optimize" onclick="runSmartOptimizer()" class="w-full bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 border border-blue-500/30 font-extrabold py-3 rounded-xl">🔎 ANALISAR MEU APARELHO</button>
+        <div id="smart-optimize-result" class="hidden bg-gray-950 border border-gray-800 rounded-xl p-4 space-y-2">
+          <b class="text-blue-300 text-sm">Análise do aparelho</b>
+          <p id="smart-optimize-summary" class="text-xs text-gray-300"></p>
+          <p id="smart-optimize-advice" class="text-xs text-gray-400"></p>
+        </div>
+      </div>
+
+      <div class="bg-gray-900/90 border border-purple-500/30 p-5 rounded-2xl space-y-4">
+        <div>
+          <h2 class="text-lg font-extrabold text-white">🎯 Laboratório de sensibilidade</h2>
+          <p class="text-xs text-gray-400 mt-1">Salve e compare suas próprias configurações. O app não mexe na mira nem automatiza ações dentro do jogo.</p>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <label class="text-xs text-gray-300">Geral (0–200)
+            <input id="lab-sensi-general" type="number" min="0" max="200" value="180" class="mt-1 w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white">
+          </label>
+          <label class="text-xs text-gray-300">Ponto vermelho (0–200)
+            <input id="lab-sensi-red" type="number" min="0" max="200" value="175" class="mt-1 w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white">
+          </label>
+          <label class="text-xs text-gray-300">Botão de tiro (%)
+            <input id="lab-sensi-fire" type="number" min="1" max="100" value="48" class="mt-1 w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white">
+          </label>
+          <label class="text-xs text-gray-300">Nome do perfil
+            <input id="lab-sensi-name" maxlength="28" placeholder="Ex.: Minha sensi" class="mt-1 w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white">
+          </label>
+        </div>
+        <button onclick="saveSensiProfile()" class="w-full bg-purple-500 hover:bg-purple-400 text-white font-extrabold py-3 rounded-xl">💾 SALVAR CONFIGURAÇÃO</button>
+        <div id="lab-sensi-list" class="space-y-2">
+          <p class="text-xs text-gray-500">Nenhuma configuração salva ainda.</p>
         </div>
       </div>
 
@@ -1505,6 +1550,109 @@
       area.remove();
     }
 
+    async function runSmartOptimizer() {
+      const button = document.getElementById('btn-smart-optimize');
+      const summary = document.getElementById('smart-optimize-summary');
+      const advice = document.getElementById('smart-optimize-advice');
+      const panel = document.getElementById('smart-optimize-result');
+      if (button) { button.disabled = true; button.textContent = 'ANALISANDO...'; }
+      try {
+        const ram = Number(navigator.deviceMemory) || null;
+        const cores = Number(navigator.hardwareConcurrency) || null;
+        const hz = await measureRefreshRate();
+        if (ram) document.getElementById('ff-ram').value = ram <= 4 ? '2-4' : ram <= 6 ? '6' : '8+';
+        if (hz) document.getElementById('ff-refresh').value = hz >= 120 ? '120' : hz >= 90 ? '90' : '60';
+        const lowResource = (ram && ram <= 4) || (cores && cores <= 4);
+        document.getElementById('ff-priority').value = lowResource ? 'smooth' : 'balanced';
+        generateFFPerformance();
+        const parts = [];
+        parts.push('RAM informada pelo navegador: ' + (ram ? ram + ' GB (valor aproximado)' : 'não disponível'));
+        parts.push('Núcleos lógicos: ' + (cores || 'não informado'));
+        parts.push('Taxa estimada pela animação da tela: ' + (hz ? hz + ' Hz' : 'não disponível'));
+        summary.textContent = parts.join(' • ');
+        advice.textContent = lowResource
+          ? 'Sugestão: priorize gráficos Suave, feche apps que não estiver usando e evite jogar enquanto o aparelho estiver quente. Confira o perfil gerado e ajuste manualmente.'
+          : 'Sugestão: comece pelo perfil Equilibrado. Se notar quedas ou aquecimento, reduza os gráficos antes de tentar taxas mais altas.';
+        panel.classList.remove('hidden');
+        showToast('Análise concluída. Confira o perfil sugerido!');
+      } catch (e) {
+        console.error('Falha no otimizador inteligente:', e);
+        showToast('Não foi possível concluir a análise neste aparelho.');
+      } finally {
+        if (button) { button.disabled = false; button.textContent = '🔎 ANALISAR MEU APARELHO'; }
+      }
+    }
+
+    function getSensiProfiles() {
+      try {
+        const value = JSON.parse(load('sensi_profiles') || '[]');
+        return Array.isArray(value) ? value.filter(x => x && typeof x === 'object') : [];
+      } catch (e) { return []; }
+    }
+    function renderSensiProfiles() {
+      const target = document.getElementById('lab-sensi-list');
+      if (!target) return;
+      const profiles = getSensiProfiles();
+      if (!profiles.length) {
+        target.innerHTML = '<p class="text-xs text-gray-500">Nenhuma configuração salva ainda.</p>';
+        return;
+      }
+      target.innerHTML = profiles.map((p, i) =>
+        '<div class="flex items-center justify-between gap-2 bg-gray-950 border border-gray-800 rounded-xl p-3">' +
+          '<div class="min-w-0"><b class="block text-xs text-white truncate">' + escapeHtml(p.name || 'Minha sensi') + '</b>' +
+          '<span class="block text-[11px] text-gray-400">Geral ' + Number(p.general) + ' • Vermelho ' + Number(p.red) + ' • Botão ' + Number(p.fire) + '%</span></div>' +
+          '<div class="flex gap-1 flex-shrink-0"><button onclick="copySensiProfile(' + i + ')" class="text-xs bg-green-500/20 text-green-300 px-2 py-1.5 rounded-lg">Copiar</button>' +
+          '<button onclick="deleteSensiProfile(' + i + ')" class="text-xs bg-red-500/10 text-red-300 px-2 py-1.5 rounded-lg" aria-label="Excluir perfil">×</button></div></div>'
+      ).join('');
+    }
+    function saveSensiProfile() {
+      const general = Number(document.getElementById('lab-sensi-general').value);
+      const red = Number(document.getElementById('lab-sensi-red').value);
+      const fire = Number(document.getElementById('lab-sensi-fire').value);
+      const valid = Number.isInteger(general) && general >= 0 && general <= 200 &&
+        Number.isInteger(red) && red >= 0 && red <= 200 &&
+        Number.isInteger(fire) && fire >= 1 && fire <= 100;
+      if (!valid) return showToast('Confira os valores: sensi de 0 a 200 e botão de 1 a 100%.');
+      const name = document.getElementById('lab-sensi-name').value.trim() || 'Perfil ' + (getSensiProfiles().length + 1);
+      const profiles = getSensiProfiles();
+      profiles.unshift({name:name.slice(0,28),general:general,red:red,fire:fire,createdAt:Date.now()});
+      store('sensi_profiles', JSON.stringify(profiles.slice(0,10)));
+      document.getElementById('lab-sensi-name').value = '';
+      renderSensiProfiles();
+      showToast('Configuração salva neste aparelho!');
+    }
+    function copySensiProfile(index) {
+      const p = getSensiProfiles()[index];
+      if (!p) return;
+      copyFFText(p.name + '\nGeral: ' + p.general + '\nPonto vermelho: ' + p.red + '\nBotão de tiro: ' + p.fire + '%');
+    }
+    function deleteSensiProfile(index) {
+      const profiles = getSensiProfiles();
+      if (!profiles[index]) return;
+      profiles.splice(index, 1);
+      store('sensi_profiles', JSON.stringify(profiles));
+      renderSensiProfiles();
+      showToast('Perfil removido.');
+    }
+
+    function runQuickDiagnostic() {
+      const ram = Number(navigator.deviceMemory) || null;
+      const cores = Number(navigator.hardwareConcurrency) || null;
+      const net = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      const issues = [];
+      if (ram && ram <= 4) issues.push('RAM limitada: use gráficos Suave e feche apps em segundo plano');
+      if (cores && cores <= 4) issues.push('poucos núcleos lógicos informados: priorize estabilidade');
+      if (net && net.effectiveType && /2g|slow-2g/.test(net.effectiveType)) issues.push('conexão móvel lenta: teste um Wi-Fi estável');
+      if (net && Number(net.rtt) > 250) issues.push('latência estimada alta na rede: pause downloads e confira o sinal');
+      const advice = document.getElementById('scan-advice');
+      if (!issues.length) {
+        advice.textContent = 'Nenhum alerta evidente nos dados disponíveis. Isso não garante FPS ou ping dentro da partida; se houver travamentos, reduza os gráficos e observe a temperatura.';
+      } else {
+        advice.textContent = issues.join('. ') + '. Os dados do navegador são aproximados e não medem diretamente o desempenho do Free Fire.';
+      }
+      showToast('Diagnóstico express concluído.');
+    }
+
     function getFFHudList() {
       try { return JSON.parse(load('ff_hud_list') || '[]'); } catch(e) { return []; }
     }
@@ -1610,6 +1758,7 @@
       updateFFChecklist();
       updateFFPrep();
       renderFFHudList();
+      renderSensiProfiles();
     }
 
     // BOTÕES DE INFORMAÇÃO (ⓘ)
@@ -1671,8 +1820,8 @@
       },
       scan: {
         title: 'Scanner',
-        does: 'Mede a taxa de atualização da tela e o ping até o servidor da página (só com internet), e mostra a RAM e os núcleos da CPU que o aparelho informa.',
-        changes: 'Nada. É só leitura. A RAM aparece limitada a 8 GB e alguns aparelhos mostram N/D.'
+        does: 'Mede a taxa visual aproximada, o tempo de resposta da conexão de teste e exibe dados de RAM e núcleos quando o navegador permite. O diagnóstico express usa esses dados para sugerir ajustes.',
+        changes: 'Nada é alterado no aparelho ou no jogo. Os dados são aproximados e não representam FPS ou ping real da partida.'
       },
       ia: {
         title: 'COBRA IA Sensi',
