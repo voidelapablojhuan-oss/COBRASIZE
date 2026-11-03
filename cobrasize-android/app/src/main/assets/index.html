@@ -118,7 +118,7 @@
         <div>
           <div class="flex items-center gap-2">
             <h1 class="text-2xl font-extrabold tracking-tight text-white">COBRASIZE</h1>
-            <span class="bg-green-500/20 text-green-400 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-green-500/30">v1.0.7</span>
+            <span class="bg-green-500/20 text-green-400 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-green-500/30">v1.0.8</span>
           </div>
           <p class="text-xs text-gray-400 mt-0.5">Ferramentas e perfis personalizados para Free Fire</p>
         </div>
@@ -174,9 +174,22 @@
         <button onclick="toggleActive()" id="btn-active" class="bg-green-500 hover:bg-green-400 text-black font-extrabold text-xs px-4 py-2.5 rounded-xl shadow-lg transition-all whitespace-nowrap">▶ ATIVAR</button>
       </div>
 
-      <p id="native-hint" class="hidden text-[11px] text-gray-400 bg-gray-900/60 border border-gray-800 rounded-xl p-3 leading-relaxed">
-        Para o app alterar o sistema de verdade: (1) no PC, com depuração USB ligada, rode uma vez <span class="text-green-400 font-mono break-all">adb shell pm grant com.cobrasize.app android.permission.WRITE_SECURE_SETTINGS</span>; (2) em Configurações &gt; Apps &gt; COBRASIZE, permita "Modificar configurações do sistema" (só para a taxa de atualização). Tudo volta ao normal ao desativar ou fechar o app.
-      </p>
+      <div id="native-hint" class="hidden bg-gray-900/70 border border-gray-700 rounded-2xl p-4 space-y-3">
+        <div>
+          <p class="text-sm font-bold text-white">🔐 Permissões do otimizador</p>
+          <p class="text-[11px] text-gray-400 mt-1">Confira o que falta. O COBRASIZE não altera nada que o Android não autorizar.</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+          <div class="bg-gray-950 rounded-xl p-3"><span id="secure-permission-dot" class="text-yellow-400">●</span> <b class="text-gray-200">Acesso ADB:</b> <span id="secure-permission-status" class="text-gray-400">Verificando…</span></div>
+          <div class="bg-gray-950 rounded-xl p-3"><span id="write-permission-dot" class="text-yellow-400">●</span> <b class="text-gray-200">Modificar sistema:</b> <span id="write-permission-status" class="text-gray-400">Verificando…</span></div>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="openSystemPermissionSettings()" class="bg-green-500 hover:bg-green-400 text-black font-bold text-xs px-3 py-2 rounded-lg">Abrir permissão do sistema</button>
+          <button onclick="copyAdbPermissionCommand()" class="bg-gray-800 hover:bg-gray-700 text-white font-semibold text-xs px-3 py-2 rounded-lg">Copiar comando ADB</button>
+          <button onclick="refreshPermissionStatus()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold text-xs px-3 py-2 rounded-lg">Verificar novamente</button>
+        </div>
+        <p class="text-[11px] text-gray-500 leading-relaxed">O acesso ADB é liberado uma única vez usando um computador com Depuração USB. O botão acima copia o comando. A permissão de modificar o sistema abre a tela oficial do Android. Em alguns aparelhos, certas opções podem não ser suportadas.</p>
+      </div>
 
       <!-- SELETOR DE PLATAFORMA & MODELO DO APARELHO / EMULADOR -->
       <div class="bg-gray-900/90 border border-gray-800 p-5 rounded-2xl space-y-4 shadow-xl">
@@ -872,6 +885,38 @@
       showToast(type === 'capa' ? "Preset Capa Máximo selecionado!" : "Preset Equilibrado selecionado!");
     }
 
+    function refreshPermissionStatus() {
+      if (!window.AndroidBridge || !AndroidBridge.getPermissionStatus) return;
+      try {
+        const status = JSON.parse(AndroidBridge.getPermissionStatus());
+        const secure = !!status.secureGranted;
+        const write = !!status.writeSettingsGranted;
+        const secureStatus = document.getElementById('secure-permission-status');
+        const writeStatus = document.getElementById('write-permission-status');
+        const secureDot = document.getElementById('secure-permission-dot');
+        const writeDot = document.getElementById('write-permission-dot');
+        if (secureStatus) secureStatus.textContent = secure ? 'Liberado' : 'Pendente: precisa do ADB';
+        if (writeStatus) writeStatus.textContent = write ? 'Liberado' : 'Pendente: toque em Abrir';
+        if (secureDot) secureDot.className = secure ? 'text-green-400' : 'text-yellow-400';
+        if (writeDot) writeDot.className = write ? 'text-green-400' : 'text-yellow-400';
+      } catch (e) {}
+    }
+
+    function openSystemPermissionSettings() {
+      if (!window.AndroidBridge || !AndroidBridge.openWriteSettings) return;
+      try {
+        if (!AndroidBridge.openWriteSettings()) showToast('Não foi possível abrir essa tela neste Android.');
+      } catch (e) { showToast('Não foi possível abrir as configurações.'); }
+    }
+
+    function copyAdbPermissionCommand() {
+      if (!window.AndroidBridge || !AndroidBridge.copyAdbCommand) return;
+      try {
+        if (AndroidBridge.copyAdbCommand()) showToast('Comando ADB copiado. Cole no terminal do PC.');
+        else showToast('Não foi possível copiar o comando.');
+      } catch (e) { showToast('Não foi possível copiar o comando.'); }
+    }
+
     function applyOptimization() {
       if (!guardActive()) return;
       const cfg = {
@@ -884,6 +929,7 @@
         let msg = 'Não foi possível aplicar no sistema.';
         try { msg = JSON.parse(AndroidBridge.applyTweaks(cfg.sensi, cfg.gpu, Number(cfg.fps))).message; } catch (e) {}
         showToast(msg);
+        refreshPermissionStatus();
       } else {
         showToast('💾 Salvo. Para alterar o sistema de verdade, use o app Android.');
       }
@@ -1893,6 +1939,7 @@
       if (window.AndroidBridge) {
         document.getElementById('native-hint').classList.remove('hidden');
         hideInstallBtn();
+        refreshPermissionStatus();
       }
       cobrasizeInitAuth();
 
