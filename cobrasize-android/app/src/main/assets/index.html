@@ -65,6 +65,7 @@
   <!-- Firebase Auth (configure firebaseConfig below before enabling account login) -->
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-functions-compat.js"></script>
   <script>
     // Cole aqui a configuração WEB do seu projeto Firebase (não é uma chave secreta).
     // O login por e-mail e o convidado autenticado exigem Firebase configurado.
@@ -811,14 +812,57 @@
       switchTab('painel');
     }
 
-    function validateVipCode() {
+    // A validação acontece exclusivamente em Cloud Functions. O app nunca decide
+    // sozinho se um código é válido.
+    async function validateVipCode() {
       const input = document.getElementById('vip-code-input');
-      if (!input.value.trim()) { showToast('Digite seu código VIP.'); return; }
-      showToast('⚠️ A validação VIP online ainda precisa ser configurada no servidor.');
+      const code = input.value.trim();
+      if (!code) { showToast('Digite seu código VIP.'); return; }
+      if (!cobrasizeFirebaseReady || !cobrasizeFirebaseAuth || !cobrasizeFirebaseFunctions) {
+        showToast('Configure o Firebase e publique as funções VIP primeiro.');
+        return;
+      }
+      const user = cobrasizeFirebaseAuth.currentUser;
+      if (!user) { showToast('Entre em uma conta ou convidado conectado para validar o VIP.'); return; }
+      const button = document.querySelector('#content-vip button[onclick="validateVipCode()"]');
+      if (button) { button.disabled = true; button.textContent = 'VALIDANDO...'; }
+      try {
+        const result = await cobrasizeFirebaseFunctions.httpsCallable('validateVipCode')({ code });
+        if (result.data && result.data.valid === true) {
+          input.value = '';
+          setVipUI();
+          showToast('👑 VIP ativado nesta conta!');
+        } else {
+          showToast('Código VIP inválido ou indisponível.');
+        }
+      } catch (e) {
+        const messages = {
+          'functions/unauthenticated': 'Entre na sua conta para validar o VIP.',
+          'functions/invalid-argument': 'Confira o código VIP digitado.',
+          'functions/not-found': 'Código VIP não encontrado.',
+          'functions/failed-precondition': 'Este código VIP já foi utilizado ou expirou.',
+          'functions/unavailable': 'Servidor VIP indisponível. Tente novamente.'
+        };
+        showToast(messages[e.code] || 'Não foi possível validar agora. Confira a configuração do servidor.');
+      } finally {
+        if (button) { button.disabled = false; button.textContent = 'VALIDAR CÓDIGO VIP ONLINE'; }
+      }
+    }
+
+    async function cobrasizeRefreshVipStatus(user) {
+      if (!user || !cobrasizeFirebaseFunctions) return;
+      try {
+        const result = await cobrasizeFirebaseFunctions.httpsCallable('getVipStatus')({});
+        if (result.data && result.data.active === true) setVipUI();
+        else if (isVipUnlocked) lockVip(false);
+      } catch (e) {
+        console.warn('Não foi possível consultar o status VIP:', e);
+      }
     }
 
     // AUTENTICAÇÃO FIREBASE
     let cobrasizeFirebaseAuth = null;
+    let cobrasizeFirebaseFunctions = null;
     let cobrasizeFirebaseReady = false;
     function cobrasizeSetAuthMessage(message, error = false) {
       const el = document.getElementById('auth-message');
@@ -883,11 +927,20 @@
       try {
         if (!firebase.apps.length) firebase.initializeApp(window.COBRASIZE_FIREBASE_CONFIG);
         cobrasizeFirebaseAuth = firebase.auth();
+        cobrasizeFirebaseFunctions = firebase.functions();
+        cobrasizeFirebaseFunctions.useEmulator && (window.COBRASIZE_USE_FUNCTIONS_EMULATOR === true
+          ? cobrasizeFirebaseFunctions.useEmulator('127.0.0.1', 5001) : null);
         cobrasizeFirebaseReady = true;
         cobrasizeFirebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
         cobrasizeFirebaseAuth.onAuthStateChanged(user => {
-          if (user) cobrasizeShowApp(user, !!user.isAnonymous);
-          else if (localStorage.getItem('cobrasize_guest_mode') === '1') cobrasizeFirebaseAuth.signInAnonymously().catch(e => cobrasizeSetAuthMessage('Não foi possível restaurar o modo convidado: ' + e.message, true));
+          if (user) {
+            cobrasizeShowApp(user, !!user.isAnonymous);
+            cobrasizeRefreshVipStatus(user);
+          } else if (localStorage.getItem('cobrasize_guest_mode') === '1') {
+            cobrasizeFirebaseAuth.signInAnonymously().catch(e => cobrasizeSetAuthMessage('Não foi possível restaurar o modo convidado: ' + e.message, true));
+          } else {
+            lockVip(false);
+          }
         });
       } catch (e) { cobrasizeSetAuthMessage('Falha ao iniciar Firebase: ' + e.message, true); }
     }
