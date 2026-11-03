@@ -900,6 +900,7 @@
 
     function lockVip(silent = false) {
       isVipUnlocked = false;
+      store('vip_license_code', '');
       document.getElementById('vip-status-text').innerHTML = 'Status VIP: <b class="text-gray-300">Bloqueado</b>';
       document.getElementById('vip-status-badge').className = "bg-gray-900 border border-gray-800 px-4 py-2 rounded-xl flex items-center gap-2 text-xs text-gray-400";
       document.getElementById('dpi-locked-view').classList.remove('hidden');
@@ -914,51 +915,77 @@
       }
     }
 
-    // A validação acontece exclusivamente em Cloud Functions. O app nunca decide
-    // sozinho se um código é válido.
+    // Identificador persistente deste app/aparelho para a ativação no Worker.
+    function getVipDeviceId() {
+      let id = load('vip_device_id');
+      if (id && id.length >= 8) return id;
+      try {
+        const bytes = new Uint8Array(16);
+        crypto.getRandomValues(bytes);
+        id = 'cs-' + Array.from(bytes).map(b => b.toString(16).padStart(2,'0')).join('');
+      } catch (e) {
+        id = 'cs-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+      }
+      store('vip_device_id', id);
+      return id;
+    }
+
+    const COBRASIZE_VIP_API = 'https://cobrasize-vip.voidelapablojhuan.workers.dev';
+
+    async function callVipWorker(code) {
+      const response = await fetch(COBRASIZE_VIP_API + '/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: code, deviceId: getVipDeviceId() }),
+        cache: 'no-store'
+      });
+      let data = {};
+      try { data = await response.json(); } catch (e) {}
+      return { response: response, data: data };
+    }
+
     async function validateVipCode() {
       const input = document.getElementById('vip-code-input');
-      const code = input.value.trim();
+      const code = input.value.trim().toUpperCase();
       if (!code) { showToast('Digite seu código VIP.'); return; }
-      if (!cobrasizeFirebaseReady || !cobrasizeFirebaseAuth || !cobrasizeFirebaseFunctions) {
-        showToast('Configure o Firebase e publique as funções VIP primeiro.');
-        return;
-      }
-      const user = cobrasizeFirebaseAuth.currentUser;
-      if (!user) { showToast('Entre em uma conta ou convidado conectado para validar o VIP.'); return; }
       const button = document.querySelector('#content-vip button[onclick="validateVipCode()"]');
       if (button) { button.disabled = true; button.textContent = 'VALIDANDO...'; }
       try {
-        const result = await cobrasizeFirebaseFunctions.httpsCallable('validateVipCode')({ code });
-        if (result.data && result.data.valid === true) {
+        const result = await callVipWorker(code);
+        if (result.response.ok && result.data.ok === true && result.data.vip === true) {
+          store('vip_license_code', code);
           input.value = '';
           setVipUI();
-          showToast('👑 VIP ativado nesta conta!');
+          showToast('👑 VIP ativado nesta conta/aparelho!');
         } else {
-          showToast('Código VIP inválido ou indisponível.');
+          const message = result.data && result.data.message ? result.data.message : 'Não foi possível validar o código.';
+          showToast(message);
         }
       } catch (e) {
-        const messages = {
-          'functions/unauthenticated': 'Entre na sua conta para validar o VIP.',
-          'functions/invalid-argument': 'Confira o código VIP digitado.',
-          'functions/not-found': 'Código VIP não encontrado.',
-          'functions/failed-precondition': 'Este código VIP já foi utilizado ou expirou.',
-          'functions/unavailable': 'Servidor VIP indisponível. Tente novamente.'
-        };
-        showToast(messages[e.code] || 'Não foi possível validar agora. Confira a configuração do servidor.');
+        console.error('Erro ao validar VIP no Worker:', e);
+        showToast('Servidor VIP sem resposta. Confira sua internet e tente novamente.');
       } finally {
         if (button) { button.disabled = false; button.textContent = 'VALIDAR CÓDIGO VIP ONLINE'; }
       }
     }
 
     async function cobrasizeRefreshVipStatus(user) {
-      if (!user || !cobrasizeFirebaseFunctions) return;
+      if (!user) return;
+      const savedCode = load('vip_license_code');
+      if (!savedCode) {
+        if (isVipUnlocked) lockVip(true);
+        return;
+      }
       try {
-        const result = await cobrasizeFirebaseFunctions.httpsCallable('getVipStatus')({});
-        if (result.data && result.data.active === true) setVipUI();
-        else if (isVipUnlocked) lockVip(false);
+        const result = await callVipWorker(savedCode);
+        if (result.response.ok && result.data && result.data.ok === true && result.data.vip === true) {
+          setVipUI();
+        } else {
+          lockVip(true);
+        }
       } catch (e) {
-        console.warn('Não foi possível consultar o status VIP:', e);
+        // Se estiver temporariamente sem internet, não apaga a licença salva.
+        console.warn('Não foi possível atualizar o status VIP:', e);
       }
     }
 
