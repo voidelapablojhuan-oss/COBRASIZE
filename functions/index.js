@@ -7,7 +7,7 @@ initializeApp();
 const db = getFirestore();
 
 function normalizeCode(value) {
-  return String(value || "").trim().toUpperCase().replace(/\\s+/g, "");
+  return String(value || "").trim().toUpperCase().replace(/\s+/g, "");
 }
 
 function hashCode(code) {
