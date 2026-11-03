@@ -472,13 +472,10 @@
     <section id="content-fftools" class="hidden space-y-6">
       <div class="bg-gray-900/90 border border-green-500/30 p-5 rounded-2xl space-y-4">
         <div>
-          <h2 class="text-lg font-extrabold text-white">🎯 Gerador de sensibilidade por perfil</h2>
-          <p class="text-xs text-gray-400 mt-1">Cria um ponto de partida usando seu aparelho e seu estilo. Os números são estimativas, não configurações oficiais nem garantia de capa.</p>
+          <h2 class="text-lg font-extrabold text-white">⚙️ Perfil de desempenho</h2>
+          <p class="text-xs text-gray-400 mt-1">Sugestões de gráficos e fluidez considerando os recursos do aparelho. Não altera o Free Fire automaticamente.</p>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <label class="text-xs text-gray-300">Modelo do aparelho
-            <input id="ff-device" class="mt-1 w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white" placeholder="Ex.: Samsung A54">
-          </label>
           <label class="text-xs text-gray-300">Memória RAM
             <select id="ff-ram" class="mt-1 w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white">
               <option value="2-4">2 a 4 GB</option><option value="6" selected>6 GB</option><option value="8+">8 GB ou mais</option>
@@ -489,32 +486,27 @@
               <option value="60" selected>60 Hz</option><option value="90">90 Hz</option><option value="120">120 Hz ou mais</option><option value="unknown">Não sei</option>
             </select>
           </label>
-          <label class="text-xs text-gray-300">Quantos dedos você usa?
-            <select id="ff-fingers" class="mt-1 w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white">
-              <option value="2">2 dedos</option><option value="3">3 dedos</option><option value="4" selected>4 dedos</option><option value="5">5 dedos</option>
-            </select>
-          </label>
-          <label class="text-xs text-gray-300 sm:col-span-2">Seu estilo
-            <select id="ff-style" class="mt-1 w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white">
-              <option value="balanced">Equilibrado</option><option value="rush">Movimentação rápida</option><option value="precision">Mais precisão</option>
+          <label class="text-xs text-gray-300 sm:col-span-2">Prioridade
+            <select id="ff-priority" class="mt-1 w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white">
+              <option value="smooth">Mais estabilidade</option><option value="balanced" selected>Equilíbrio entre imagem e fluidez</option><option value="visual">Melhor qualidade visual</option>
             </select>
           </label>
         </div>
-        <button onclick="generateFFSensi()" class="w-full bg-green-500 hover:bg-green-400 text-black font-extrabold py-3 rounded-xl">⚡ GERAR MINHA SENSI</button>
-        <div id="ff-sensi-result" class="hidden bg-gray-950 border border-green-500/20 rounded-xl p-4 space-y-3">
-          <div class="flex items-center justify-between"><b class="text-green-400 text-sm">Sua sugestão</b><span class="text-[10px] text-gray-500">Escala 0–200</span></div>
-          <div id="ff-sensi-values" class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm text-white"></div>
-          <p id="ff-sensi-note" class="text-xs text-gray-400"></p>
-          <button onclick="copyFFSensi()" class="w-full bg-gray-800 hover:bg-gray-700 text-green-300 font-bold py-2.5 rounded-xl">📋 Copiar configuração</button>
+        <button onclick="generateFFPerformance()" class="w-full bg-green-500 hover:bg-green-400 text-black font-extrabold py-3 rounded-xl">⚡ GERAR PERFIL</button>
+        <div id="ff-performance-result" class="hidden bg-gray-950 border border-green-500/20 rounded-xl p-4 space-y-2">
+          <b class="text-green-400 text-sm">Perfil sugerido</b>
+          <div id="ff-performance-values" class="text-sm text-white space-y-2"></div>
+          <p id="ff-performance-note" class="text-xs text-gray-400"></p>
+          <button onclick="copyFFPerformance()" class="w-full bg-gray-800 hover:bg-gray-700 text-green-300 font-bold py-2.5 rounded-xl">📋 Copiar perfil</button>
         </div>
       </div>
 
       <div class="bg-gray-900/90 border border-gray-800 p-5 rounded-2xl space-y-4">
         <div>
           <h2 class="text-lg font-extrabold text-white">🧩 Central de HUD e códigos</h2>
-          <p class="text-xs text-gray-400 mt-1">Guarde códigos de HUD e compartilhe com amigos. O COBRASIZE não aplica o código dentro do jogo: você cola manualmente no Free Fire, se o jogo aceitar.</p>
+          <p class="text-xs text-gray-400 mt-1">Guarde códigos de HUD e compartilhe com amigos. O COBRASIZE não aplica códigos dentro do jogo: você usa o recurso oficial do Free Fire, se disponível.</p>
         </div>
-        <input id="ff-hud-name" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white" placeholder="Nome do HUD (ex.: 4 dedos)">
+        <input id="ff-hud-name" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white" placeholder="Nome do HUD (ex.: Meu layout)">
         <textarea id="ff-hud-code" rows="3" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white" placeholder="Cole aqui seu código de HUD"></textarea>
         <div class="grid grid-cols-2 gap-2">
           <button onclick="saveFFHud()" class="bg-green-500 hover:bg-green-400 text-black font-bold py-2.5 rounded-xl">💾 Salvar HUD</button>
@@ -555,19 +547,19 @@
 
       <div class="bg-gray-900/90 border border-gray-800 p-5 rounded-2xl space-y-4">
         <div>
-          <h2 class="text-lg font-extrabold text-white">🏁 Treino rápido de mira</h2>
-          <p class="text-xs text-gray-400 mt-1">Uma rotina curta para praticar no modo de treinamento do próprio jogo.</p>
+          <h2 class="text-lg font-extrabold text-white">✅ Checklist pré-partida</h2>
+          <p class="text-xs text-gray-400 mt-1">Uma conferência rápida para deixar suas configurações organizadas.</p>
         </div>
-        <div id="ff-training-list" class="space-y-3 text-sm text-gray-200">
-          <label class="flex gap-3 items-start"><input type="checkbox" data-ff-drill="warmup" class="mt-1 accent-green-500"><span><b>2 min — Aquecimento</b><small class="block text-xs text-gray-500">Faça movimentos leves e se acostume com os controles.</small></span></label>
-          <label class="flex gap-3 items-start"><input type="checkbox" data-ff-drill="tracking" class="mt-1 accent-green-500"><span><b>2 min — Acompanhar alvos</b><small class="block text-xs text-gray-500">Pratique manter a mira acompanhando alvos de treino.</small></span></label>
-          <label class="flex gap-3 items-start"><input type="checkbox" data-ff-drill="flick" class="mt-1 accent-green-500"><span><b>2 min — Controle de movimento</b><small class="block text-xs text-gray-500">Treine movimentos curtos e controlados, sem acelerar além do confortável.</small></span></label>
-          <label class="flex gap-3 items-start"><input type="checkbox" data-ff-drill="review" class="mt-1 accent-green-500"><span><b>2 min — Revisão</b><small class="block text-xs text-gray-500">Veja o que ficou confortável e ajuste uma configuração por vez.</small></span></label>
+        <div class="space-y-3 text-sm text-gray-200">
+          <label class="flex gap-3 items-start"><input type="checkbox" data-ff-prep="sync" class="mt-1 accent-green-500"><span><b>Sincronizei minhas configurações</b><small class="block text-xs text-gray-500">Use a opção de sincronização do jogo quando disponível.</small></span></label>
+          <label class="flex gap-3 items-start"><input type="checkbox" data-ff-prep="hud" class="mt-1 accent-green-500"><span><b>Conferi meu HUD</b><small class="block text-xs text-gray-500">Confira se o layout salvo é o que deseja usar.</small></span></label>
+          <label class="flex gap-3 items-start"><input type="checkbox" data-ff-prep="audio" class="mt-1 accent-green-500"><span><b>Conferi áudio e volume</b><small class="block text-xs text-gray-500">Ajuste os sons para um nível confortável.</small></span></label>
+          <label class="flex gap-3 items-start"><input type="checkbox" data-ff-prep="network" class="mt-1 accent-green-500"><span><b>Conferi minha conexão</b><small class="block text-xs text-gray-500">Evite downloads grandes durante a partida.</small></span></label>
         </div>
-        <p id="ff-training-progress" class="text-xs text-gray-400">0 de 4 etapas concluídas</p>
-        <button onclick="resetFFTraining()" class="text-xs text-gray-400 underline">Reiniciar treino</button>
+        <p id="ff-prep-progress" class="text-xs text-gray-400">0 de 4 itens conferidos</p>
+        <button onclick="resetFFPrep()" class="text-xs text-gray-400 underline">Reiniciar checklist</button>
       </div>
-      <p class="text-[10px] text-gray-500 text-center">As ferramentas são auxiliares. O COBRASIZE não altera arquivos do Free Fire, não automatiza comandos e não promete FPS ou mira melhores.</p>
+      <p class="text-[10px] text-gray-500 text-center">Ferramentas auxiliares. O COBRASIZE não altera arquivos do Free Fire, não automatiza comandos e não promete FPS ou ping melhores.</p>
     </section>
 
     <!-- MODAL DE INFORMAÇÃO (ⓘ) -->
@@ -1426,47 +1418,40 @@
     }
 
     // FERRAMENTAS FREE FIRE — perfis locais e utilitários seguros
-    let lastFFSensi = null;
+    let lastFFPerformance = null;
 
-    function clampFF(n) { return Math.max(0, Math.min(200, Math.round(n))); }
-
-    function generateFFSensi() {
-      const device = document.getElementById('ff-device').value.trim() || savedDeviceName || 'Seu aparelho';
+    function generateFFPerformance() {
       const ram = document.getElementById('ff-ram').value;
       const refresh = document.getElementById('ff-refresh').value;
-      const fingers = Number(document.getElementById('ff-fingers').value);
-      const style = document.getElementById('ff-style').value;
-      let general = 164;
-      if (ram === '2-4') general += 12;
-      if (ram === '8+') general -= 3;
-      if (style === 'rush') general += 8;
-      if (style === 'precision') general -= 8;
-      if (fingers >= 4) general += 2;
-      if (refresh === '120') general -= 3;
-      if (refresh === '60') general += 2;
-      const profile = {
-        device: device,
-        general: clampFF(general),
-        redDot: clampFF(general - 3),
-        scope2x: clampFF(general - 14),
-        scope4x: clampFF(general - 29),
-        sniper: clampFF(general - 76),
-        freeLook: clampFF(general - 17),
-        ram: ram,
-        refresh: refresh,
-        fingers: fingers,
-        style: style
-      };
-      lastFFSensi = profile;
-      const fields = [['Geral',profile.general],['Ponto vermelho',profile.redDot],['Mira 2x',profile.scope2x],['Mira 4x',profile.scope4x],['AWM',profile.sniper],['Olhadinha',profile.freeLook]];
-      document.getElementById('ff-sensi-values').innerHTML = fields.map(function(item) {
-        return '<div class="bg-gray-900 rounded-lg p-2"><span class="block text-[10px] text-gray-500">' + item[0] + '</span><b>' + item[1] + '</b></div>';
-      }).join('');
-      document.getElementById('ff-sensi-note').textContent = 'Perfil estimado para ' + device + ', ' + fingers + ' dedos. Teste no treinamento e ajuste de 3 a 5 pontos por vez. Não existe sensibilidade universal.';
-      document.getElementById('ff-sensi-result').classList.remove('hidden');
-      store('ff_last_sensi', JSON.stringify(profile));
+      const priority = document.getElementById('ff-priority').value;
+      let graphics = 'Padrão';
+      let fps = 'Alto FPS, se o aparelho mantiver estabilidade';
+      if (ram === '2-4' || priority === 'smooth') {
+        graphics = 'Suave';
+        fps = 'Normal primeiro; teste Alto FPS somente se ficar estável';
+      } else if (priority === 'visual' && ram === '8+') {
+        graphics = 'Padrão; experimente opções visuais superiores se não houver travamentos';
+      } else if (ram === '6') {
+        graphics = 'Suave ou Padrão, conforme a estabilidade';
+      }
+      if (refresh === '60') fps += ' (tela de 60 Hz)';
+      if (refresh === '90' || refresh === '120') fps += ' (a tela pode suportar taxa maior, mas o jogo/aparelho também precisam permitir)';
+      if (refresh === 'unknown') fps += ' (confira a taxa suportada nas configurações do aparelho)';
+      lastFFPerformance = {ram:ram,refresh:refresh,priority:priority,graphics:graphics,fps:fps};
+      document.getElementById('ff-performance-values').innerHTML =
+        '<div class="bg-gray-900 rounded-lg p-3"><span class="text-xs text-gray-500">Gráficos sugeridos</span><b class="block mt-1">' + escapeHtml(graphics) + '</b></div>' +
+        '<div class="bg-gray-900 rounded-lg p-3"><span class="text-xs text-gray-500">Taxa de quadros</span><b class="block mt-1">' + escapeHtml(fps) + '</b></div>';
+      document.getElementById('ff-performance-note').textContent = 'Estimativa inicial para ' + ram + ' de RAM. Faça um teste em partida casual e priorize estabilidade; nem todos os aparelhos oferecem as mesmas opções.';
+      document.getElementById('ff-performance-result').classList.remove('hidden');
+      store('ff_last_performance',JSON.stringify(lastFFPerformance));
     }
-
+    function copyFFPerformance() {
+      if (!lastFFPerformance) {
+        try { lastFFPerformance = JSON.parse(load('ff_last_performance') || 'null'); } catch(e) {}
+      }
+      if (!lastFFPerformance) return showToast('Gere um perfil primeiro.');
+      copyFFText('COBRASIZE — Perfil de desempenho\nGráficos: ' + lastFFPerformance.graphics + '\nTaxa de quadros: ' + lastFFPerformance.fps);
+    }
     function copyFFText(value) {
       if (!value) { showToast('Nada para copiar.'); return; }
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -1482,14 +1467,6 @@
       area.select();
       try { document.execCommand('copy'); showToast('Copiado!'); } catch(e) { showToast('Não foi possível copiar automaticamente.'); }
       area.remove();
-    }
-    function copyFFSensi() {
-      if (!lastFFSensi) {
-        try { lastFFSensi = JSON.parse(load('ff_last_sensi') || 'null'); } catch(e) {}
-      }
-      if (!lastFFSensi) return showToast('Gere uma sensibilidade primeiro.');
-      const p = lastFFSensi;
-      copyFFText('COBRASIZE — ' + p.device + '\nGeral: ' + p.general + '\nPonto vermelho: ' + p.redDot + '\nMira 2x: ' + p.scope2x + '\nMira 4x: ' + p.scope4x + '\nAWM: ' + p.sniper + '\nOlhadinha: ' + p.freeLook);
     }
 
     function getFFHudList() {
@@ -1538,9 +1515,9 @@
       const name = document.getElementById('ff-hud-name').value.trim() || 'Meu HUD';
       const code = document.getElementById('ff-hud-code').value.trim();
       if (!code) return showToast('Cole ou abra um código antes de compartilhar.');
-      const text = name + '\nCódigo: ' + code;
-      if (navigator.share) navigator.share({title:'Meu HUD do Free Fire',text:text}).catch(function(){});
-      else copyFFText(text);
+      const shareText = name + '\nCódigo: ' + code;
+      if (navigator.share) navigator.share({title:'Meu HUD do Free Fire',text:shareText}).catch(function(){});
+      else copyFFText(shareText);
     }
 
     function updateFFChecklist() {
@@ -1555,7 +1532,6 @@
       document.querySelectorAll('[data-ff-check]').forEach(function(el){el.checked=false;});
       updateFFChecklist();
     }
-
     async function testFFNetwork() {
       const result = document.getElementById('ff-net-result');
       const advice = document.getElementById('ff-net-advice');
@@ -1576,30 +1552,27 @@
         advice.textContent = 'Não foi possível alcançar o serviço de teste. Verifique a internet e tente novamente.';
       } finally { clearTimeout(timeout); }
     }
-
-    function updateFFTraining() {
-      const checks = Array.from(document.querySelectorAll('[data-ff-drill]'));
+    function updateFFPrep() {
+      const checks = Array.from(document.querySelectorAll('[data-ff-prep]'));
       const done = checks.filter(function(el){return el.checked;}).length;
-      document.getElementById('ff-training-progress').textContent = done + ' de ' + checks.length + ' etapas concluídas';
-      store('ff_training_checks', JSON.stringify(checks.map(function(el){return el.checked;})));
+      document.getElementById('ff-prep-progress').textContent = done + ' de ' + checks.length + ' itens conferidos';
+      store('ff_prep_checks', JSON.stringify(checks.map(function(el){return el.checked;})));
     }
-    function resetFFTraining() {
-      document.querySelectorAll('[data-ff-drill]').forEach(function(el){el.checked=false;});
-      updateFFTraining();
+    function resetFFPrep() {
+      document.querySelectorAll('[data-ff-prep]').forEach(function(el){el.checked=false;});
+      updateFFPrep();
     }
     function initFFTools() {
-      const device = document.getElementById('ff-device');
-      if (device && !device.value) device.value = savedDeviceName || '';
       try {
         const perf = JSON.parse(load('ff_performance_checks') || '[]');
         document.querySelectorAll('[data-ff-check]').forEach(function(el,i){el.checked=!!perf[i];});
-        const training = JSON.parse(load('ff_training_checks') || '[]');
-        document.querySelectorAll('[data-ff-drill]').forEach(function(el,i){el.checked=!!training[i];});
+        const prep = JSON.parse(load('ff_prep_checks') || '[]');
+        document.querySelectorAll('[data-ff-prep]').forEach(function(el,i){el.checked=!!prep[i];});
       } catch(e) {}
       document.querySelectorAll('[data-ff-check]').forEach(function(el){el.onchange=updateFFChecklist;});
-      document.querySelectorAll('[data-ff-drill]').forEach(function(el){el.onchange=updateFFTraining;});
+      document.querySelectorAll('[data-ff-prep]').forEach(function(el){el.onchange=updateFFPrep;});
       updateFFChecklist();
-      updateFFTraining();
+      updateFFPrep();
       renderFFHudList();
     }
 
