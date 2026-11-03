@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>COBRASIZE — Otimizador Gamer & Sensibilidade</title>
+  <!-- CONFIGURAÇÃO PARA APP NATIVO / PWA STANDALONE -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0b0f19">
+  <script>try { var t = localStorage.getItem('cobrasize_v1_theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch (e) {}</script>
+  <link id="dynamic-manifest" rel="manifest" href="">
+  <script>
+    // O Tailwind via CDN mostra um aviso informativo no console ("não use em produção"). Só esse aviso é ocultado.
+    (function () {
+      var original = console.warn;
+      console.warn = function () {
+        if (arguments[0] && String(arguments[0]).indexOf('should not be used in production') !== -1) return;
+        return original.apply(console, arguments);
+      };
+    })();
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: {
+      white: 'rgb(var(--c-white) / <alpha-value>)',
+      gray: { 200: 'rgb(var(--g200) / <alpha-value>)', 300: 'rgb(var(--g300) / <alpha-value>)', 400: 'rgb(var(--g400) / <alpha-value>)', 500: 'rgb(var(--g500) / <alpha-value>)', 600: 'rgb(var(--g600) / <alpha-value>)', 700: 'rgb(var(--g700) / <alpha-value>)', 800: 'rgb(var(--g800) / <alpha-value>)', 900: 'rgb(var(--g900) / <alpha-value>)', 950: 'rgb(var(--g950) / <alpha-value>)' },
+      green: { 400: 'rgb(var(--a400) / <alpha-value>)', 500: 'rgb(var(--a500) / <alpha-value>)' },
+      yellow: { 400: 'rgb(var(--y400) / <alpha-value>)', 500: 'rgb(var(--y500) / <alpha-value>)' }
+    } } } };
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root { --g200:229 231 235; --g300:209 213 219; --g400:156 163 175; --g500:107 114 128; --g600:75 85 99; --g700:55 65 81; --g800:31 41 55; --g900:17 24 39; --g950:3 7 18; --c-white:255 255 255; --a400:74 222 128; --a500:34 197 94; --y400:250 204 21; --y500:234 179 8; --page-bg:#0b0f19; --page-fg:#f3f4f6; --sb-track:#111827; --sb-thumb:#374151; color-scheme: dark; }
+    html[data-theme="claro"] { --g200:31 41 55; --g300:55 65 81; --g400:75 85 99; --g500:107 114 128; --g600:156 163 175; --g700:209 213 219; --g800:229 231 235; --g900:255 255 255; --g950:243 244 246; --c-white:17 24 39; --a400:22 163 74; --y400:161 98 7; --page-bg:#f3f4f6; --page-fg:#111827; --sb-track:#e5e7eb; --sb-thumb:#9ca3af; color-scheme: light; }
+    html[data-theme="amoled"] { --g700:45 45 45; --g800:26 26 26; --g900:8 8 8; --g950:0 0 0; --page-bg:#000000; --sb-track:#000000; --sb-thumb:#2d2d2d; }
+    html[data-theme="azul"] { --a400:96 165 250; --a500:59 130 246; --page-bg:#0a1020; }
+    html[data-theme="roxo"] { --a400:192 132 252; --a500:168 85 247; --page-bg:#100b1a; }
+    html[data-theme="fogo"] { --a400:251 146 60; --a500:249 115 22; --page-bg:#150e0a; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--page-bg);
+      color: var(--page-fg);
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+    .glow-green {
+      box-shadow: 0 0 20px rgba(34, 197, 94, 0.25);
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: var(--sb-track);
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: var(--sb-thumb);
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgb(var(--a500));
+    }
+      .hidden { display: none; }
+  </style>
+  <!-- Firebase Auth (configure firebaseConfig below before enabling account login) -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script>
+    // Cole aqui a configuração WEB do seu projeto Firebase (não é uma chave secreta).
+    // O login por e-mail e o convidado autenticado exigem Firebase configurado.
+    window.COBRASIZE_FIREBASE_CONFIG = {
+      apiKey: "COLOQUE_SUA_API_KEY",
+      authDomain: "SEU_PROJETO.firebaseapp.com",
+      projectId: "SEU_PROJETO",
+      appId: "SEU_APP_ID"
+    };
+  </script>
+</head>
+<body class="min-h-screen flex flex-col justify-between antialiased selection:bg-green-500 selection:text-black">
+  <!-- TELA DE LOGIN / CONVIDADO -->
+  <div id="auth-screen" class="fixed inset-0 z-[100] bg-gray-950/95 backdrop-blur-sm flex items-center justify-center p-5">
+    <div class="w-full max-w-md bg-gray-900 border border-gray-800 rounded-3xl p-6 shadow-2xl space-y-5">
+      <div class="text-center space-y-2">
+        <div class="mx-auto w-16 h-16 rounded-2xl bg-green-500/10 border border-green-500/30 flex items-center justify-center text-3xl">🐍</div>
+        <h2 class="text-2xl font-extrabold text-white">COBRASIZE</h2>
+        <p class="text-sm text-gray-400">Entre na sua conta ou continue como convidado</p>
+      </div>
+      <div id="auth-fields" class="space-y-3">
+        <input id="auth-email" type="email" autocomplete="email" placeholder="Seu e-mail" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-green-500">
+        <input id="auth-password" type="password" autocomplete="current-password" placeholder="Senha (mínimo 6 caracteres)" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-green-500">
+        <button onclick="cobrasizeSignIn()" class="w-full bg-green-500 hover:bg-green-400 text-black font-extrabold py-3 rounded-xl">ENTRAR</button>
+        <button onclick="cobrasizeSignUp()" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-xl">CRIAR CONTA</button>
+      </div>
+      <div class="flex items-center gap-3 text-gray-600 text-xs"><span class="h-px bg-gray-700 flex-1"></span>OU<span class="h-px bg-gray-700 flex-1"></span></div>
+      <button onclick="cobrasizeGuest()" class="w-full border border-green-500/40 text-green-400 hover:bg-green-500/10 font-bold py-3 rounded-xl">CONTINUAR COMO CONVIDADO</button>
+      <p id="auth-message" class="text-xs text-center text-gray-400" aria-live="polite">Sua conta sincroniza o acesso entre aparelhos quando o Firebase estiver configurado.</p>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="fixed top-5 right-5 z-50 transform translate-y-[-150%] transition-all duration-300 bg-gray-800 border border-green-500 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center space-x-3 pointer-events-none opacity-0">
+    <span class="text-xl">🐍</span>
+    <span id="toast-message" class="text-sm font-medium">Notificação</span>
+  </div>
+
+  <div class="max-w-4xl mx-auto w-full p-4 sm:p-6 flex-grow">
+    
+    <!-- HEADER -->
+    <header class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-800">
+      <div class="flex items-center space-x-3">
+        <div class="w-12 h-12 bg-green-500/10 border border-green-500/30 rounded-2xl flex items-center justify-center text-2xl shadow-inner">
+          🐍
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-2xl font-extrabold tracking-tight text-white">COBRASIZE</h1>
+            <span class="bg-green-500/20 text-green-400 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-green-500/30">PRO v4.6 (APK Ready)</span>
+          </div>
+          <p class="text-xs text-gray-400 mt-0.5">Otimização de Tela, Resposta de Toque & IA Sensi 100% Anti-Ban</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="installStandaloneApp()" id="btn-install-apk" class="bg-green-500 hover:bg-green-400 text-black font-extrabold text-xs px-4 py-2.5 rounded-xl shadow-lg transition-all flex items-center gap-1.5 animate-bounce">
+          📲 BAIXAR & INSTALAR APK
+        </button>
+        <div id="vip-status-badge" class="bg-gray-900 border border-gray-800 px-4 py-2 rounded-xl flex items-center gap-2 text-xs text-gray-400">
+          <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+          <span id="vip-status-text">Status VIP: <b class="text-gray-300">Bloqueado</b></span>
+        </div>
+        <button id="account-button" onclick="cobrasizeAccountAction()" class="bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold px-3 py-2.5 rounded-xl">Conta</button>
+      </div>
+    </header>
+
+    <!-- NAVIGATION TABS -->
+    <nav class="flex overflow-x-auto gap-2 mb-6 p-1.5 bg-gray-900/80 backdrop-blur border border-gray-800 rounded-2xl custom-scrollbar">
+      <button onclick="switchTab('painel')" id="tab-painel" class="flex-1 min-w-[110px] py-2.5 px-4 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 bg-green-500 text-black shadow-lg">
+        ⚡ Painel
+      </button>
+      <button onclick="switchTab('calcdpi')" id="tab-calcdpi" class="flex-1 min-w-[110px] py-2.5 px-4 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 text-gray-400 hover:text-white hover:bg-gray-800">
+        🎯 Calc DPI
+      </button>
+      <button onclick="switchTab('scan')" id="tab-scan" class="flex-1 min-w-[110px] py-2.5 px-4 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 text-gray-400 hover:text-white hover:bg-gray-800">
+        📊 Scan
+      </button>
+      <button onclick="switchTab('ia')" id="tab-ia" class="flex-1 min-w-[110px] py-2.5 px-4 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 text-gray-400 hover:text-white hover:bg-gray-800">
+        🤖 IA Sensi
+      </button>
+      <button onclick="switchTab('vip')" id="tab-vip" class="flex-1 min-w-[110px] py-2.5 px-4 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 text-yellow-400 hover:bg-gray-800">
+        👑 VIP
+      </button>
+      <button onclick="switchTab('config')" id="tab-config" class="flex-1 min-w-[110px] py-2.5 px-4 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 text-gray-400 hover:text-white hover:bg-gray-800">
+        ⚙️ Config
+      </button>
+    </nav>
+
+    <!-- TAB 1: PAINEL PRINCIPAL -->
+    <section id="content-painel" class="space-y-6">
+      <!-- STATUS ATIVO / INATIVO -->
+      <div id="active-card" class="bg-gray-900/90 border border-red-500/30 p-5 rounded-2xl flex items-center justify-between gap-4 shadow-xl">
+        <div>
+          <div class="text-sm font-bold text-white flex items-center gap-2">
+            <span id="active-dot" class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+            <span id="active-text">COBRASIZE inativo</span><i data-info="active"></i>
+          </div>
+          <p id="active-sub" class="text-xs text-gray-400 mt-1">Ative para liberar as funções. Ao fechar o app, tudo é desativado.</p>
+        </div>
+        <button onclick="toggleActive()" id="btn-active" class="bg-green-500 hover:bg-green-400 text-black font-extrabold text-xs px-4 py-2.5 rounded-xl shadow-lg transition-all whitespace-nowrap">▶ ATIVAR</button>
+      </div>
+
+      <p id="native-hint" class="hidden text-[11px] text-gray-400 bg-gray-900/60 border border-gray-800 rounded-xl p-3 leading-relaxed">
+        Para o app alterar o sistema de verdade: (1) no PC, com depuração USB ligada, rode uma vez <span class="text-green-400 font-mono break-all">adb shell pm grant com.cobrasize.app android.permission.WRITE_SECURE_SETTINGS</span>; (2) em Configurações &gt; Apps &gt; COBRASIZE, permita "Modificar configurações do sistema" (só para a taxa de atualização). Tudo volta ao normal ao desativar ou fechar o app.
+      </p>
+
+      <!-- SELETOR DE PLATAFORMA & MODELO DO APARELHO / EMULADOR -->
+      <div class="bg-gray-900/90 border border-gray-800 p-5 rounded-2xl space-y-4 shadow-xl">
+        <div class="flex items-center justify-between">
+          <label class="text-sm font-semibold text-gray-300 flex items-center gap-2">
+            🖥️ / 📱 Plataforma & Dispositivo<i data-info="platform"></i>
+          </label>
+          <span class="text-xs text-gray-500" id="device-auto-detected">Detectado via Navegador</span>
+        </div>
+
+        <!-- TOGGLE ANDROID / PC -->
+        <div class="grid grid-cols-2 gap-3 p-1 bg-gray-950 border border-gray-800 rounded-xl">
+          <button onclick="setPlatform('android')" id="btn-platform-android" class="py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-2 bg-green-500 text-black shadow-md transition-all">
+            🤖 Android (Mobile)
+          </button>
+          <button onclick="setPlatform('pc')" id="btn-platform-pc" class="py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-2 text-gray-400 hover:text-white transition-all">
+            💻 PC (Emulador / BlueStacks)
+          </button>
+        </div>
+
+        <div class="flex gap-2">
+          <input type="text" id="user-device-input" placeholder="Ex: Samsung A54 ou BlueStacks 5 (PC)..." class="flex-1 bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500 transition-colors">
+          <button onclick="saveUserDevice()" class="bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/40 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all">
+            Salvar
+          </button>
+        </div>
+
+        <!-- PC CONFIG EXTRA FIELDS (HIDDEN BY DEFAULT UNLESS PC SELECTED) -->
+        <div id="pc-extra-fields" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-gray-800">
+          <div>
+            <label class="text-[11px] font-semibold text-gray-400">DPI do Mouse (PC)<i data-info="pcfields"></i></label>
+            <input type="number" id="mouse-dpi" value="800" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-green-500">
+          </div>
+          <div>
+            <label class="text-[11px] font-semibold text-gray-400">Sensi Y (Vertical)<i data-info="pcfields"></i></label>
+            <input type="number" step="0.01" min="0" id="sensi-y" value="0.45" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-green-500">
+          </div>
+          <div>
+            <label class="text-[11px] font-semibold text-gray-400">Sensi X (Horizontal)<i data-info="pcfields"></i></label>
+            <input type="number" step="0.01" min="0" id="sensi-x" value="1.20" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-green-500">
+          </div>
+        </div>
+      </div>
+
+      <!-- OTÍMIZAÇÃO DE RESPOSTA DA TELA -->
+      <div class="bg-gray-900/90 border border-gray-800 p-6 rounded-2xl space-y-6 shadow-xl">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              🎛️ Otimização de Resposta da Tela & Latência
+            </h2>
+            <p class="text-xs text-gray-400 mt-1">Ajuste fino de aceleração de sensibilidade dinâmica</p>
+          </div>
+          <span id="touch-speed-badge" class="bg-green-500/10 text-green-400 border border-green-500/30 text-xs font-bold px-3 py-1 rounded-full">
+            240 Hz | 1.0ms Latência
+          </span>
+        </div>
+
+        <!-- SLIDER SENSI -->
+        <div class="space-y-2">
+          <div class="flex justify-between text-sm font-medium">
+            <span class="text-gray-400 flex items-center">Resposta de Toque (tempo de toque longo)<i data-info="slider"></i></span>
+            <span id="slider-val" class="text-green-400 font-bold">150 / 200</span>
+          </div>
+          <input type="range" id="touch-slider" min="0" max="200" value="150" oninput="updateTouchSlider(this.value)" class="w-full h-2.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-green-500">
+          <p class="text-xs text-gray-500">Escala expandida (0 a 200) compatível com modos Padrão e Alto no jogo.</p>
+        </div>
+
+        <div class="flex items-center text-xs text-gray-400 font-semibold">Presets<i data-info="presets"></i></div>
+        <!-- PRESETS DE CAPA -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <button onclick="setPreset('capa')" class="p-4 bg-gray-950 hover:bg-gray-800 border border-gray-800 hover:border-green-500/50 rounded-xl text-left transition-all group">
+            <div class="font-bold text-white group-hover:text-green-400 flex items-center gap-2">
+              🔥 Capa Máximo
+            </div>
+            <p class="text-xs text-gray-400 mt-1">Aceleração de toque extrema, latência de 1ms e foco em puxada rápida de mira.</p>
+          </button>
+          <button onclick="setPreset('equilibrado')" class="p-4 bg-gray-950 hover:bg-gray-800 border border-gray-800 hover:border-green-500/50 rounded-xl text-left transition-all group">
+            <div class="font-bold text-white group-hover:text-green-400 flex items-center gap-2">
+              ⚖️ Equilibrado
+            </div>
+            <p class="text-xs text-gray-400 mt-1">Precisão estável para médias e longas distâncias sem passar da cabeça.</p>
+          </button>
+        </div>
+
+        <!-- MODOS DE GPU & TELA -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-gray-800 pt-5">
+          <div class="space-y-2">
+            <label class="text-xs font-semibold text-gray-400">Modo de Resposta Visual GPU<i data-info="gpu"></i></label>
+            <select id="gpu-mode" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-green-500">
+              <option value="turbo">⚡ Turbo Game Mode (Latência Zero)</option>
+              <option value="stable">🛡️ Estável Mantido (Ultra Fluidez)</option>
+              <option value="battery">🔋 Economia Gamer (Frio)</option>
+            </select>
+          </div>
+          <div class="space-y-2">
+            <label class="text-xs font-semibold text-gray-400">FPS / Taxa Visual Preferencial<i data-info="fps"></i></label>
+            <select id="fps-mode" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-green-500">
+              <option value="120">🚀 Max FPS (120Hz / 90Hz)</option>
+              <option value="60">🎯 Padrão Competitivo (60Hz)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- BOTOES DE AÇÃO -->
+        <div class="flex flex-col sm:flex-row gap-3 pt-2">
+          <button onclick="applyOptimization()" class="flex-1 bg-green-500 hover:bg-green-400 text-black font-extrabold py-3.5 px-6 rounded-xl shadow-lg hover:shadow-green-500/20 transition-all flex items-center justify-center gap-2">
+            🚀 APLICAR OTIMIZAÇÃO
+          </button>
+          <button onclick="saveSettings(true)" class="bg-gray-800 hover:bg-gray-700 text-green-400 font-semibold py-3.5 px-5 rounded-xl transition-all">
+            💾 Salvar
+          </button>
+          <button onclick="restoreDefaults()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold py-3.5 px-5 rounded-xl transition-all">
+            🔄 Restaurar
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-4 text-[11px] text-gray-500">
+          <span>Aplicar<i data-info="apply"></i></span>
+          <span>Salvar<i data-info="save"></i></span>
+          <span>Restaurar<i data-info="restore"></i></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: CALCULADORA DE DPI (VIP ONLY) -->
+    <section id="content-calcdpi" class="hidden space-y-6">
+      <div id="dpi-locked-view" class="bg-gray-900/90 border border-yellow-500/30 p-8 rounded-2xl text-center space-y-4">
+        <div class="w-16 h-16 bg-yellow-500/10 border border-yellow-500/30 rounded-2xl flex items-center justify-center text-3xl mx-auto">
+          🔒
+        </div>
+        <h2 class="text-xl font-bold text-white">Calculadora DPI Avançada Trancada</h2>
+        <p class="text-sm text-gray-400 max-w-md mx-auto">Esta função requer validação do código VIP para calcular proporções exatas de Menor Largura sem causar tela preta ou distorção visual.</p>
+        <button onclick="switchTab('vip')" class="bg-yellow-500 hover:bg-yellow-400 text-black font-extrabold px-6 py-3 rounded-xl transition-all">
+          👑 Inserir Código VIP
+        </button>
+      </div>
+
+      <div id="dpi-unlocked-view" class="hidden bg-gray-900/90 border border-gray-800 p-6 rounded-2xl space-y-6">
+        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+          🎯 Calculadora de DPI Pro & Menor Largura<i data-info="dpi"></i>
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <label class="text-xs font-semibold text-gray-400">DPI Padrão de Fábrica</label>
+            <input type="number" id="dpi-base" value="360" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500">
+          </div>
+          <div class="space-y-2">
+            <label class="text-xs font-semibold text-gray-400">Multiplicador Desejado</label>
+            <select id="dpi-mult" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500">
+              <option value="1.3">⚡ Capa Leve (+30%)</option>
+              <option value="1.6" selected>🔥 Capa Pro (+60%)</option>
+              <option value="2.0">☠️ Capa Extremo (+100%)</option>
+            </select>
+          </div>
+        </div>
+        <button onclick="calculateDPI()" class="w-full bg-green-500 hover:bg-green-400 text-black font-extrabold py-3 rounded-xl transition-all">
+          Calcular Menor Largura Recomendada
+        </button>
+        <div id="dpi-result" class="hidden p-4 bg-green-500/10 border border-green-500/30 rounded-xl text-center space-y-1">
+          <span class="text-xs text-green-400 uppercase tracking-wider font-semibold">Resultado Calculado</span>
+          <div id="dpi-value" class="text-3xl font-extrabold text-white">576 dp</div>
+          <p class="text-xs text-gray-400">Ajuste este valor na opção "Menor Largura" no menu do Desenvolvedor do seu Android. Anote o valor original antes de mudar, para poder voltar se a tela ficar estranha.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: SCAN DE HARDWARE REAL -->
+    <section id="content-scan" class="hidden space-y-6">
+      <div class="bg-gray-900/90 border border-gray-800 p-6 rounded-2xl space-y-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              📊 Scanner de Hardware & Latência Real<i data-info="scan"></i>
+            </h2>
+            <p class="text-xs text-gray-400 mt-1">Diagnóstico extraído em tempo real das APIs do sistema</p>
+          </div>
+          <button onclick="runDeviceScan(true)" class="bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/30 text-xs font-bold px-3.5 py-2 rounded-xl transition-all">
+            ⚡ Re-Escanear
+          </button>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div class="bg-gray-950 border border-gray-800 p-4 rounded-xl text-center">
+            <span class="text-xs text-gray-500 font-semibold uppercase">Ping Estimado</span>
+            <div id="scan-ping" class="text-2xl font-extrabold text-green-400 mt-1">-- ms</div>
+          </div>
+          <div class="bg-gray-950 border border-gray-800 p-4 rounded-xl text-center">
+            <span class="text-xs text-gray-500 font-semibold uppercase">Taxa Visual (Hz)</span>
+            <div id="scan-hz" class="text-2xl font-extrabold text-green-400 mt-1">-- Hz</div>
+          </div>
+          <div class="bg-gray-950 border border-gray-800 p-4 rounded-xl text-center">
+            <span class="text-xs text-gray-500 font-semibold uppercase">Memória RAM</span>
+            <div id="scan-ram" class="text-2xl font-extrabold text-green-400 mt-1">-- GB</div>
+          </div>
+          <div class="bg-gray-950 border border-gray-800 p-4 rounded-xl text-center">
+            <span class="text-xs text-gray-500 font-semibold uppercase">Núcleos da CPU</span>
+            <div id="scan-temp" class="text-2xl font-extrabold text-green-400 mt-1">--</div>
+          </div>
+        </div>
+
+        <div class="p-4 bg-gray-950 border border-gray-800 rounded-xl text-xs text-gray-400 space-y-1">
+          <p class="font-bold text-gray-300">ℹ️ Detalhes do Diagnóstico Real:</p>
+          <p id="scan-details-text">Clique no botão re-escanear para recalcular o tempo de transmissão de resposta.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: COBRA IA SENSI -->
+    <section id="content-ia" class="hidden space-y-6">
+      <div id="ia-locked-view" class="bg-gray-900/90 border border-yellow-500/30 p-8 rounded-2xl text-center space-y-4">
+        <div class="w-16 h-16 bg-yellow-500/10 border border-yellow-500/30 rounded-2xl flex items-center justify-center text-3xl mx-auto">
+          🔒
+        </div>
+        <h2 class="text-xl font-bold text-white">COBRA IA Sensi Trancada</h2>
+        <p class="text-sm text-gray-400 max-w-md mx-auto">A inteligência artificial com busca de influenciadores e sensibilidades personalizadas é exclusiva para membros VIP.</p>
+        <button onclick="switchTab('vip')" class="bg-yellow-500 hover:bg-yellow-400 text-black font-extrabold px-6 py-3 rounded-xl transition-all">
+          👑 Ativar com Código VIP
+        </button>
+      </div>
+
+      <div id="ia-unlocked-view" class="hidden bg-gray-900/90 border border-gray-800 rounded-2xl flex flex-col h-[520px] shadow-xl overflow-hidden">
+        <!-- HEADER IA -->
+        <div class="p-4 border-b border-gray-800 bg-gray-950/50 flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="w-3 h-3 bg-green-500 rounded-full animate-ping"></div>
+            <div>
+              <h3 class="font-bold text-white text-sm">COBRA IA — Sensi & Pro Players<i data-info="ia"></i></h3>
+              <p class="text-[10px] text-gray-400">Modo Inteligente | Respostas Conversacionais vs Sensibilidades</p>
+            </div>
+          </div>
+          <span class="bg-blue-500/10 text-blue-400 border border-blue-500/30 text-[10px] font-bold px-2.5 py-1 rounded-full">
+            🧠 Sugestões estimadas
+          </span>
+        </div>
+
+        <!-- CHAT BOX -->
+        <div id="chat-box" class="flex-1 p-4 overflow-y-auto space-y-4 custom-scrollbar text-sm">
+          <div class="flex items-start space-x-2">
+            <div class="w-8 h-8 rounded-xl bg-green-500/20 border border-green-500/30 flex items-center justify-center text-sm flex-shrink-0">🤖</div>
+            <div class="bg-gray-800/90 border border-gray-700/50 p-3.5 rounded-2xl rounded-tl-none max-w-[85%] text-gray-200">
+              Olá! Sou a <b>COBRA IA</b>. Me diga qual seu estilo de jogo ou peça a sensi de qualquer famoso/pro player (<i>Nobru, Freitas, Two9, Thurzin, etc.</i>) que eu gero uma <b>sugestão estimada</b> pra você (valores não oficiais). Também mostro o botão de atirar e a menor largura (DPI).
+            </div>
+          </div>
+        </div>
+
+        <!-- INPUT BOX -->
+        <div class="p-3 border-t border-gray-800 bg-gray-950 flex gap-2">
+          <input type="text" id="chat-input" onkeydown="if(event.key==='Enter') sendMessage()" placeholder="Digite 'Manda a sensi do Freitas' ou mande um oi..." class="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500 transition-colors">
+          <button onclick="sendMessage()" class="bg-green-500 hover:bg-green-400 text-black px-5 py-2.5 rounded-xl font-bold text-sm transition-all">
+            Enviar
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: CÓDIGO VIP -->
+    <section id="content-vip" class="hidden space-y-6">
+      <div class="bg-gray-900/90 border border-gray-800 p-6 rounded-2xl space-y-6 shadow-xl">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            👑 Ativação do Acesso VIP<i data-info="vip"></i>
+          </h2>
+          <p class="text-xs text-gray-400 mt-1">A validação do código será feita online quando o serviço de licenças estiver configurado</p>
+        </div>
+
+        <div class="space-y-3">
+          <label class="text-xs font-semibold text-gray-400">Código de Licença VIP</label>
+          <input type="text" id="vip-code-input" placeholder="Digite seu código VIP..." class="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-yellow-500 font-mono tracking-wider">
+          <button onclick="validateVipCode()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-extrabold py-3.5 rounded-xl transition-all shadow-lg hover:shadow-yellow-500/20">
+            VALIDAR CÓDIGO VIP ONLINE
+          </button>
+          <button id="btn-vip-lock" onclick="lockVip()" class="hidden w-full bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold py-2.5 rounded-xl transition-all text-xs">
+            Bloquear VIP neste aparelho
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 6: CONFIGURAÇÕES -->
+    <section id="content-config" class="hidden space-y-6">
+      <div class="bg-gray-900/90 border border-gray-800 p-6 rounded-2xl space-y-5 shadow-xl">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            ⚙️ Configurações<i data-info="theme"></i>
+          </h2>
+          <p class="text-xs text-gray-400 mt-1">Escolha o tema do app. A escolha fica salva neste aparelho.</p>
+        </div>
+        <div id="theme-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+      </div>
+    </section>
+
+    <!-- MODAL DE INFORMAÇÃO (ⓘ) -->
+    <div id="info-modal" role="dialog" aria-modal="true" aria-labelledby="info-title" class="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center p-4 hidden">
+      <div class="bg-gray-900 border border-green-500/30 rounded-2xl p-5 max-w-md w-full space-y-3 text-left shadow-2xl">
+        <div class="flex items-center justify-between border-b border-gray-800 pb-2">
+          <h3 id="info-title" class="font-bold text-white text-sm"></h3>
+          <button type="button" onclick="closeInfo()" aria-label="Fechar" class="text-gray-400 hover:text-white font-bold text-lg">&times;</button>
+        </div>
+        <div class="text-xs space-y-3">
+          <div>
+            <p class="text-green-400 font-semibold mb-1">O que faz</p>
+            <p id="info-does" class="text-gray-300 leading-relaxed"></p>
+          </div>
+          <div>
+            <p class="text-yellow-400 font-semibold mb-1">O que modifica</p>
+            <p id="info-changes" class="text-gray-300 leading-relaxed"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL INSTRUÇÕES APK NATIVO -->
+    <div id="modal-apk-guide" role="dialog" aria-modal="true" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+      <div class="bg-gray-900 border border-green-500/30 rounded-2xl p-6 max-w-lg w-full space-y-4 text-left shadow-2xl">
+        <div class="flex items-center justify-between border-b border-gray-800 pb-3">
+          <h3 class="font-bold text-white text-base flex items-center gap-2">📲 Instalar COBRASIZE como App Nativo</h3>
+          <button onclick="closeApkGuide()" aria-label="Fechar" class="text-gray-400 hover:text-white font-bold text-lg">&times;</button>
+        </div>
+        <div class="text-xs text-gray-300 space-y-3 max-h-[60vh] overflow-y-auto custom-scrollbar pr-1">
+          <p class="text-green-400 font-semibold">Instale diretamente no sistema do seu celular (Android / PC):</p>
+          
+          <div id="native-prompt-container" class="bg-gray-950 p-4 rounded-xl border border-green-500/40 text-center space-y-3">
+            <p class="text-white font-medium">Toque abaixo para instalar o aplicativo no seu dispositivo:</p>
+            <button onclick="triggerBrowserInstall()" class="w-full bg-green-500 hover:bg-green-400 text-black font-extrabold py-3 rounded-xl transition-all text-sm shadow-lg">
+              Instalar Aplicativo Nativo
+            </button>
+          </div>
+
+          <div class="bg-gray-950 p-3.5 rounded-xl border border-gray-800 text-[11px] space-y-1.5">
+            <p class="text-yellow-400 font-bold">💡 Para gerar o instalador .APK independente:</p>
+            <p>1. Baixe o código fonte `index.html` desta tela.</p>
+            <p>2. Acesse <b>pwabuilder.com</b> ou <b>website2apk.com</b>.</p>
+            <p>3. Insira o arquivo e clique em <b>"Generate Android APK"</b> para baixar o pacote instalável em seu celular!</p>
+          </div>
+        </div>
+        <button onclick="closeApkGuide()" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 rounded-xl transition-all text-xs">
+          Fechar
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="text-center py-4 text-xs text-gray-600 border-t border-gray-900">
+    COBRASIZE © 2026 — Otimização Anti-Ban de Sensibilidade e Resposta de Toque
+    <p class="mt-1 text-gray-500">Feito por <b class="text-green-400">wcobra</b> e <b class="text-green-400">IA</b></p>
+  </footer>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // ESTADO GLOBAL DO APP
+    let isVipUnlocked = false;
+    let savedDeviceName = "";
+    let selectedPlatform = "android"; // 'android' ou 'pc'
+    let deferredPrompt = null;
+
+    // ARMAZENAMENTO / UTILITÁRIOS
+    const STORE_KEY = 'cobrasize_v1';
+    const DEFAULTS = { sensi: 150, gpu: 'turbo', fps: '120' };
+    let iaBusy = false;
+    let toastTimer = null;
+
+    function store(key, value) { try { localStorage.setItem(`${STORE_KEY}_${key}`, value); } catch (e) {} }
+    function load(key) { try { return localStorage.getItem(`${STORE_KEY}_${key}`); } catch (e) { return null; } }
+
+    function escapeHtml(str) {
+      const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+      return String(str).replace(/[&<>"']/g, c => map[c]);
+    }
+    function hashSeed(str) {
+      let h = 2166136261;
+      for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+      return h >>> 0;
+    }
+    function seededRandom(seed) {
+      return function () {
+        seed = (seed + 0x6D2B79F5) | 0;
+        let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    // ÍCONE + MANIFEST DINÂMICO (MODO STANDALONE)
+    function makeIcon(size) {
+      const c = document.createElement('canvas');
+      c.width = c.height = size;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#22c55e';
+      ctx.fillRect(0, 0, size, size);
+      ctx.font = `${Math.round(size * 0.6)}px serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🐍', size / 2, size / 2 + size * 0.04);
+      return c.toDataURL('image/png');
+    }
+
+    function isStandalone() {
+      return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+    }
+    function hideInstallBtn() {
+      document.getElementById('btn-install-apk').classList.add('hidden');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      try {
+        const manifestData = {
+          name: "COBRASIZE Pro",
+          short_name: "COBRASIZE",
+          id: window.location.pathname,
+          start_url: window.location.href,
+          display: "standalone",
+          background_color: "#0b0f19",
+          theme_color: "#0b0f19",
+          icons: [192, 512].map(n => ({ src: makeIcon(n), sizes: `${n}x${n}`, type: "image/png", purpose: "any" }))
+        };
+        const blob = new Blob([JSON.stringify(manifestData)], { type: 'application/json' });
+        document.getElementById('dynamic-manifest').href = URL.createObjectURL(blob);
+        const touchIcon = document.createElement('link');
+        touchIcon.rel = 'apple-touch-icon';
+        touchIcon.href = makeIcon(180);
+        document.head.appendChild(touchIcon);
+      } catch (e) {
+        console.warn('Manifest dinâmico indisponível:', e);
+      }
+      if (isStandalone()) hideInstallBtn();
+    });
+
+    // INSTALAÇÃO NATIVA DO NAVEGADOR
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      showToast("📲 Aplicativo pronto para instalação em tela cheia!");
+    });
+    window.addEventListener('appinstalled', () => {
+      deferredPrompt = null;
+      hideInstallBtn();
+      closeApkGuide();
+      showToast("Aplicativo instalado com sucesso!");
+    });
+
+    function installStandaloneApp() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+      } else {
+        openApkGuide();
+      }
+    }
+
+    function triggerBrowserInstall() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choice) => {
+          if (choice.outcome === 'accepted') closeApkGuide();
+          deferredPrompt = null;
+        });
+      } else {
+        showToast("Use o menu do navegador (⋮) e escolha 'Adicionar à tela inicial'.");
+      }
+    }
+
+    // MODAL GUIA APK
+    function openApkGuide() {
+      document.getElementById('modal-apk-guide').classList.remove('hidden');
+    }
+    function closeApkGuide() {
+      document.getElementById('modal-apk-guide').classList.add('hidden');
+    }
+    document.getElementById('modal-apk-guide').addEventListener('click', (e) => {
+      if (e.target.id === 'modal-apk-guide') closeApkGuide();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeApkGuide();
+    });
+
+    // PLATAFORMA TOGGLE
+    function setPlatform(platform, silent = false) {
+      selectedPlatform = platform;
+      store('platform', platform);
+      const btnAndroid = document.getElementById('btn-platform-android');
+      const btnPc = document.getElementById('btn-platform-pc');
+      const pcFields = document.getElementById('pc-extra-fields');
+      const on = "py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-2 bg-green-500 text-black shadow-md transition-all";
+      const off = "py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-2 text-gray-400 hover:text-white transition-all";
+
+      btnAndroid.className = platform === 'android' ? on : off;
+      btnPc.className = platform === 'pc' ? on : off;
+      pcFields.classList.toggle('hidden', platform !== 'pc');
+      if (!silent) {
+        showToast(platform === 'android' ? "Plataforma alternada para Android (Mobile)" : "Plataforma alternada para PC (Emulador)");
+      }
+    }
+
+    // TOAST SYSTEM
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-message').innerText = msg;
+      toast.classList.remove('translate-y-[-150%]', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-[-150%]', 'opacity-0');
+      }, 3000);
+    }
+
+    // ALTERNÂNCIA DE ABAS
+    function switchTab(tabName) {
+      const tabs = ['painel', 'calcdpi', 'scan', 'ia', 'vip', 'config'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`tab-${t}`);
+        const content = document.getElementById(`content-${t}`);
+        if (t === tabName) {
+          btn.className = "flex-1 min-w-[110px] py-2.5 px-4 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 bg-green-500 text-black shadow-lg";
+          content.classList.remove('hidden');
+        } else {
+          btn.className = "flex-1 min-w-[110px] py-2.5 px-4 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 text-gray-400 hover:text-white hover:bg-gray-800";
+          content.classList.add('hidden');
+        }
+      });
+
+      if (tabName === 'scan') {
+        runDeviceScan();
+      }
+    }
+
+    // DISPOSITIVO USER INPUT
+    function saveUserDevice() {
+      const val = document.getElementById('user-device-input').value.trim();
+      if (val) {
+        savedDeviceName = val;
+        store('device', val);
+        showToast(`Modelo salvo: ${savedDeviceName}`);
+      } else {
+        showToast("Por favor digite o nome do modelo!");
+      }
+    }
+
+    // SLIDER SENSI & HZ RESPONSE
+    function updateTouchSlider(val) {
+      val = Number(val);
+      document.getElementById('slider-val').innerText = `${val} / 200`;
+      const lp = 500 - Math.round((val / 200) * 250);
+      document.getElementById('touch-speed-badge').innerText = `Toque longo: ${lp} ms`;
+    }
+
+    function setPreset(type) {
+      if (!guardActive()) return;
+      const value = type === 'capa' ? 185 : 130;
+      document.getElementById('touch-slider').value = value;
+      updateTouchSlider(value);
+      showToast(type === 'capa' ? "Preset Capa Máximo selecionado!" : "Preset Equilibrado selecionado!");
+    }
+
+    function applyOptimization() {
+      if (!guardActive()) return;
+      const cfg = {
+        sensi: Number(document.getElementById('touch-slider').value),
+        gpu: document.getElementById('gpu-mode').value,
+        fps: document.getElementById('fps-mode').value
+      };
+      saveSettings(false);
+      if (window.AndroidBridge) {
+        let msg = 'Não foi possível aplicar no sistema.';
+        try { msg = JSON.parse(AndroidBridge.applyTweaks(cfg.sensi, cfg.gpu, Number(cfg.fps))).message; } catch (e) {}
+        showToast(msg);
+      } else {
+        showToast('💾 Salvo. Para alterar o sistema de verdade, use o app Android.');
+      }
+    }
+
+    function restoreDefaults() {
+      if (!guardActive()) return;
+      document.getElementById('touch-slider').value = DEFAULTS.sensi;
+      document.getElementById('gpu-mode').value = DEFAULTS.gpu;
+      document.getElementById('fps-mode').value = DEFAULTS.fps;
+      updateTouchSlider(DEFAULTS.sensi);
+      saveSettings(false);
+      if (window.AndroidBridge) { try { AndroidBridge.restoreTweaks(); } catch (e) {} }
+      showToast("Configurações padrão restauradas.");
+    }
+
+    function saveSettings(manual) {
+      const cfg = {
+        sensi: Number(document.getElementById('touch-slider').value),
+        gpu: document.getElementById('gpu-mode').value,
+        fps: document.getElementById('fps-mode').value,
+        dpiBase: document.getElementById('dpi-base').value,
+        dpiMult: document.getElementById('dpi-mult').value
+      };
+      store('settings', JSON.stringify(cfg));
+      if (manual) showToast('💾 Configuração salva neste aparelho.');
+    }
+
+    function loadSettings() {
+      let cfg = DEFAULTS;
+      try { cfg = Object.assign({}, DEFAULTS, JSON.parse(load('settings') || '{}')); } catch (e) {}
+      const n = Number(cfg.sensi);
+      const sensi = Number.isFinite(n) ? Math.min(200, Math.max(0, n)) : DEFAULTS.sensi;
+      const setSelect = (id, v, fallback) => {
+        const el = document.getElementById(id);
+        el.value = String(v);
+        if (el.value !== String(v)) el.value = fallback;
+      };
+      document.getElementById('touch-slider').value = sensi;
+      setSelect('gpu-mode', cfg.gpu, DEFAULTS.gpu);
+      setSelect('fps-mode', cfg.fps, DEFAULTS.fps);
+      updateTouchSlider(sensi);
+      if (cfg.dpiBase) document.getElementById('dpi-base').value = cfg.dpiBase;
+      if (cfg.dpiMult) document.getElementById('dpi-mult').value = cfg.dpiMult;
+    }
+
+    // VIP: a validação local foi removida. O código deve ser validado no servidor
+    // (por exemplo, Firebase Cloud Function) para não poder ser extraído do APK.
+    function setVipUI() {
+      isVipUnlocked = true;
+      document.getElementById('vip-status-text').innerHTML = '<b class="text-yellow-400">ATIVADO PRO</b>';
+      document.getElementById('vip-status-badge').className = "bg-yellow-500/10 border border-yellow-500/30 px-4 py-2 rounded-xl flex items-center gap-2 text-xs text-yellow-400";
+      document.getElementById('dpi-locked-view').classList.add('hidden');
+      document.getElementById('dpi-unlocked-view').classList.remove('hidden');
+      document.getElementById('ia-locked-view').classList.add('hidden');
+      document.getElementById('ia-unlocked-view').classList.remove('hidden');
+      document.getElementById('btn-vip-lock').classList.remove('hidden');
+    }
+
+    function lockVip() {
+      isVipUnlocked = false;
+      document.getElementById('vip-status-text').innerHTML = 'Status VIP: <b class="text-gray-300">Bloqueado</b>';
+      document.getElementById('vip-status-badge').className = "bg-gray-900 border border-gray-800 px-4 py-2 rounded-xl flex items-center gap-2 text-xs text-gray-400";
+      document.getElementById('dpi-locked-view').classList.remove('hidden');
+      document.getElementById('dpi-unlocked-view').classList.add('hidden');
+      document.getElementById('ia-locked-view').classList.remove('hidden');
+      document.getElementById('ia-unlocked-view').classList.add('hidden');
+      document.getElementById('btn-vip-lock').classList.add('hidden');
+      document.getElementById('vip-code-input').value = '';
+      showToast('🔒 VIP bloqueado neste aparelho.');
+      switchTab('painel');
+    }
+
+    function validateVipCode() {
+      const input = document.getElementById('vip-code-input');
+      if (!input.value.trim()) { showToast('Digite seu código VIP.'); return; }
+      showToast('⚠️ A validação VIP online ainda precisa ser configurada no servidor.');
+    }
+
+    // AUTENTICAÇÃO FIREBASE
+    let cobrasizeFirebaseAuth = null;
+    let cobrasizeFirebaseReady = false;
+    function cobrasizeSetAuthMessage(message, error = false) {
+      const el = document.getElementById('auth-message');
+      if (el) { el.textContent = message; el.className = 'text-xs text-center ' + (error ? 'text-red-400' : 'text-gray-400'); }
+    }
+    function cobrasizeConfigReady() {
+      const c = window.COBRASIZE_FIREBASE_CONFIG || {};
+      return c.apiKey && !c.apiKey.startsWith('COLOQUE_') && c.projectId && c.projectId !== 'SEU_PROJETO' && c.appId && c.appId !== 'SEU_APP_ID';
+    }
+    function cobrasizeShowApp(user, guest = false) {
+      document.getElementById('auth-screen').classList.add('hidden');
+      const btn = document.getElementById('account-button');
+      if (btn) btn.textContent = guest ? 'Convidado · Sair' : 'Minha conta · Sair';
+      window.cobrasizeCurrentUser = user || null;
+      window.cobrasizeIsGuest = !!guest;
+    }
+    function cobrasizeGuest() {
+      if (cobrasizeFirebaseReady && cobrasizeFirebaseAuth) {
+        cobrasizeFirebaseAuth.signInAnonymously().then(userCred => cobrasizeShowApp(userCred.user, true))
+          .catch(err => cobrasizeSetAuthMessage('Não foi possível entrar como convidado: ' + err.message, true));
+      } else {
+        // Modo convidado local para testar o app sem backend; não é uma conta sincronizada.
+        localStorage.setItem('cobrasize_guest_mode', '1');
+        cobrasizeShowApp(null, true);
+        showToast('Entrou como convidado neste aparelho.');
+      }
+    }
+    async function cobrasizeSignIn() {
+      if (!cobrasizeFirebaseReady) return cobrasizeSetAuthMessage('Configure o Firebase no arquivo index.html para ativar contas. O modo convidado continua disponível.', true);
+      const email = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value;
+      try { const c = await cobrasizeFirebaseAuth.signInWithEmailAndPassword(email, password); cobrasizeShowApp(c.user, false); }
+      catch (e) { cobrasizeSetAuthMessage(cobrasizeAuthError(e), true); }
+    }
+    async function cobrasizeSignUp() {
+      if (!cobrasizeFirebaseReady) return cobrasizeSetAuthMessage('Configure o Firebase no arquivo index.html para criar contas. O modo convidado continua disponível.', true);
+      const email = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value;
+      if (password.length < 6) return cobrasizeSetAuthMessage('A senha precisa ter pelo menos 6 caracteres.', true);
+      try { const c = await cobrasizeFirebaseAuth.createUserWithEmailAndPassword(email, password); cobrasizeShowApp(c.user, false); showToast('Conta criada com sucesso!'); }
+      catch (e) { cobrasizeSetAuthMessage(cobrasizeAuthError(e), true); }
+    }
+    function cobrasizeAuthError(e) {
+      const map = { 'auth/invalid-email':'E-mail inválido.', 'auth/user-not-found':'Conta não encontrada.', 'auth/wrong-password':'Senha incorreta.', 'auth/email-already-in-use':'Este e-mail já está cadastrado.', 'auth/weak-password':'Escolha uma senha mais forte.', 'auth/invalid-credential':'E-mail ou senha incorretos.' };
+      return map[e.code] || ('Não foi possível autenticar: ' + (e.message || 'erro desconhecido'));
+    }
+    async function cobrasizeAccountAction() {
+      if (cobrasizeFirebaseAuth && cobrasizeFirebaseAuth.currentUser) await cobrasizeFirebaseAuth.signOut();
+      localStorage.removeItem('cobrasize_guest_mode');
+      window.cobrasizeCurrentUser = null;
+      window.cobrasizeIsGuest = false;
+      lockVip();
+      document.getElementById('auth-screen').classList.remove('hidden');
+      cobrasizeSetAuthMessage('Você saiu da sessão. Entre novamente ou continue como convidado.');
+    }
+    function cobrasizeInitAuth() {
+      if (!cobrasizeConfigReady()) {
+        cobrasizeSetAuthMessage('Firebase ainda não configurado: contas ficam indisponíveis. Você pode testar como convidado neste aparelho.');
+        if (localStorage.getItem('cobrasize_guest_mode') === '1') cobrasizeShowApp(null, true);
+        return;
+      }
+      try {
+        if (!firebase.apps.length) firebase.initializeApp(window.COBRASIZE_FIREBASE_CONFIG);
+        cobrasizeFirebaseAuth = firebase.auth();
+        cobrasizeFirebaseReady = true;
+        cobrasizeFirebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        cobrasizeFirebaseAuth.onAuthStateChanged(user => {
+          if (user) cobrasizeShowApp(user, !!user.isAnonymous);
+          else if (localStorage.getItem('cobrasize_guest_mode') === '1') cobrasizeFirebaseAuth.signInAnonymously().catch(e => cobrasizeSetAuthMessage('Não foi possível restaurar o modo convidado: ' + e.message, true));
+        });
+      } catch (e) { cobrasizeSetAuthMessage('Falha ao iniciar Firebase: ' + e.message, true); }
+    }
+
+    // CALCULADORA DPI
+    function calculateDPI() {
+      if (!guardActive()) return;
+      const base = parseFloat(document.getElementById('dpi-base').value);
+      const mult = parseFloat(document.getElementById('dpi-mult').value) || 1.6;
+      if (!base || base < 120 || base > 800) {
+        showToast("Digite um DPI de fábrica válido (120 a 800).");
+        return;
+      }
+      document.getElementById('dpi-value').innerText = `${Math.round(base * mult)} dp`;
+      document.getElementById('dpi-result').classList.remove('hidden');
+    }
+
+    // DEVICE SCAN
+    let scanning = false;
+
+    function measureRefreshRate() {
+      const measure = new Promise(resolve => {
+        const deltas = [];
+        let last = performance.now();
+        const frame = (now) => {
+          deltas.push(now - last);
+          last = now;
+          if (deltas.length < 40) return requestAnimationFrame(frame);
+          const sorted = deltas.slice(5).sort((a, b) => a - b);
+          const hz = 1000 / sorted[Math.floor(sorted.length / 2)];
+          const common = [60, 75, 90, 120, 144, 165, 240];
+          resolve(common.reduce((a, b) => Math.abs(b - hz) < Math.abs(a - hz) ? b : a));
+        };
+        requestAnimationFrame(frame);
+      });
+      return Promise.race([measure, new Promise(r => setTimeout(() => r(null), 2500))]);
+    }
+
+    async function runDeviceScan(manual = false) {
+      if (!appActive) { if (manual) guardActive(); return; }
+      if (scanning) return;
+      scanning = true;
+      if (manual) showToast("Iniciando escaneamento do dispositivo...");
+      try {
+        // 1. Ping (só mede se estiver em http/https, com limite de 3 s)
+        let ping = null;
+        if (location.protocol.startsWith('http')) {
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), 3000);
+          try {
+            const t0 = performance.now();
+            await fetch(location.href, { method: 'HEAD', cache: 'no-store', signal: ctrl.signal });
+            ping = Math.round(performance.now() - t0);
+          } catch (e) {}
+          clearTimeout(timer);
+        }
+        if (ping === null && navigator.connection && navigator.connection.rtt) ping = navigator.connection.rtt;
+        document.getElementById('scan-ping').innerText = ping === null ? 'N/D' : `${ping} ms`;
+
+        // 2. Taxa de atualização medida via requestAnimationFrame
+        const hz = await measureRefreshRate();
+        document.getElementById('scan-hz').innerText = hz ? `${hz} Hz` : 'N/D';
+
+        // 3. RAM (o navegador limita o valor a 8 GB e só alguns suportam)
+        const mem = navigator.deviceMemory;
+        document.getElementById('scan-ram').innerText = mem ? `${mem}${mem >= 8 ? '+' : ''} GB` : 'N/D';
+
+        // 4. Núcleos lógicos da CPU
+        const cores = navigator.hardwareConcurrency;
+        document.getElementById('scan-temp').innerText = cores ? `${cores}` : 'N/D';
+
+        document.getElementById('scan-details-text').innerText =
+          `Núcleos lógicos CPU: ${cores || 'N/D'} | Densidade de Pixels: ${window.devicePixelRatio}x | Tela: ${window.screen.width}x${window.screen.height}`;
+        if (manual) showToast("Escaneamento concluído!");
+      } catch (e) {
+        console.error(e);
+        if (manual) showToast("Não foi possível concluir o escaneamento.");
+      } finally {
+        scanning = false;
+      }
+    }
+
+    // CHAT DA COBRA IA
+    function sendMessage() {
+      if (!guardActive()) return;
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text || iaBusy) return;
+      iaBusy = true;
+
+      const chatBox = document.getElementById('chat-box');
+
+      // Mensagem do Usuário
+      const userDiv = document.createElement('div');
+      userDiv.className = 'flex items-start justify-end space-x-2';
+      const userBubble = document.createElement('div');
+      userBubble.className = 'bg-green-500 text-black font-medium p-3.5 rounded-2xl rounded-tr-none max-w-[85%] shadow-md break-words';
+      userBubble.textContent = text;
+      userDiv.appendChild(userBubble);
+      chatBox.appendChild(userDiv);
+      input.value = '';
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      // Checa se é apenas cumprimento ou solicitação de sensi
+      const isGreeting = /^(oi+|olá|ola|e ai|e aí|eae|opa|tudo bem|td bem|salve|boa tarde|bom dia|boa noite)[\s!?.,]*(tudo bem\??)?[\s!?.,]*$/i.test(text);
+
+      // Loading Indicator
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'flex items-start space-x-2';
+      loadingDiv.id = 'ia-loading';
+      loadingDiv.innerHTML = `
+        <div class="w-8 h-8 rounded-xl bg-green-500/20 border border-green-500/30 flex items-center justify-center text-sm flex-shrink-0">🤖</div>
+        <div class="bg-gray-800/90 border border-gray-700/50 p-3.5 rounded-2xl rounded-tl-none text-gray-400 animate-pulse text-xs flex items-center gap-2">
+          <span>🔍 Gerando sugestão estimada para o seu aparelho...</span>
+        </div>
+      `;
+      chatBox.appendChild(loadingDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      setTimeout(() => {
+        try {
+        loadingDiv.remove();
+
+        const botDiv = document.createElement('div');
+        botDiv.className = 'flex items-start space-x-2';
+
+        if (isGreeting) {
+          botDiv.innerHTML = `
+            <div class="w-8 h-8 rounded-xl bg-green-500/20 border border-green-500/30 flex items-center justify-center text-sm flex-shrink-0">🤖</div>
+            <div class="bg-gray-800/90 border border-gray-700/50 p-3.5 rounded-2xl rounded-tl-none max-w-[85%] text-gray-200">
+              Tudo ótimo! Como posso te ajudar hoje? Quer uma sugestão de sensibilidade para o seu aparelho ou no estilo de algum pro player? (valores estimados)
+            </div>
+          `;
+        } else {
+          // Gerar Sensi Personalizada Dinâmica (Android vs PC)
+          const targetDevice = savedDeviceName || (selectedPlatform === 'pc' ? "Emulador PC (BlueStacks/LDPlayer)" : "Smartphone Android");
+          const rnd = seededRandom(hashSeed(`${selectedPlatform}|${targetDevice}|${text.toLowerCase()}`));
+          const modeType = rnd() > 0.5 ? "Modo Padrão (0 a 200)" : "Modo Alto (0 a 200)";
+          
+          const geral = 170 + Math.floor(rnd() * 25);
+          const redDot = 160 + Math.floor(rnd() * 30);
+          const mira2x = 150 + Math.floor(rnd() * 35);
+          const mira4x = 140 + Math.floor(rnd() * 40);
+          const awm = 80 + Math.floor(rnd() * 40);
+
+          if (selectedPlatform === 'pc') {
+            const mouseDpi = document.getElementById('mouse-dpi')?.value || "800";
+            const sensiY = (0.35 + rnd() * 0.25).toFixed(2);
+            const sensiX = (1.10 + rnd() * 0.30).toFixed(2);
+
+            botDiv.innerHTML = `
+              <div class="w-8 h-8 rounded-xl bg-green-500/20 border border-green-500/30 flex items-center justify-center text-sm flex-shrink-0">🤖</div>
+              <div class="bg-gray-800/90 border border-gray-700/50 p-4 rounded-2xl rounded-tl-none max-w-[88%] text-gray-200 space-y-3">
+                <div class="flex items-center justify-between border-b border-gray-700/60 pb-2">
+                  <span class="font-bold text-green-400">💻 Configuração Recomendada (PC / Emulador)</span>
+                  <span class="text-[10px] bg-green-500/10 text-green-400 border border-green-500/30 px-2 py-0.5 rounded">${modeType}</span>
+                </div>
+                <p class="text-xs text-gray-300"><b>Emulador / Dispositivo:</b> ${escapeHtml(targetDevice)}</p>
+                
+                <p class="text-[10px] text-yellow-400/80">⚠️ Valores estimados. Ajuste ao seu gosto; não são oficiais de nenhum jogador.</p>
+                <div class="grid grid-cols-2 gap-2 text-xs bg-gray-950/60 p-2.5 rounded-xl border border-gray-800">
+                  <div>🖱️ <b>DPI Mouse:</b> ${escapeHtml(mouseDpi)} DPI</div>
+                  <div>⬆️ <b>Sensi Y (Capa):</b> ${sensiY}</div>
+                  <div>➡️ <b>Sensi X (Lado):</b> ${sensiX}</div>
+                  <div>🎯 <b>Geral no Jogo:</b> ${geral}</div>
+                  <div>🔴 <b>Ponto Vermelho:</b> ${redDot}</div>
+                  <div>🔍 <b>Mira 2x:</b> ${mira2x}</div>
+                </div>
+
+                <div class="text-xs space-y-1 bg-green-500/5 p-2.5 rounded-xl border border-green-500/20">
+                  <p class="font-bold text-green-400">📍 Onde Configurar (PC):</p>
+                  <p>1. <b>No Emulador:</b> Abra o Editor de Controles > Clique com o botão direito no Mapeamento de Campo e ajuste a <b>Sensi Y (${sensiY})</b> e <b>Sensi X (${sensiX})</b>.</p>
+                  <p>2. <b>No Mouse:</b> Ajuste o botão físico de DPI para <b>${escapeHtml(mouseDpi)} DPI</b>.</p>
+                  <p>3. <b>No Windows:</b> Deixe a velocidade do ponteiro do mouse no 6º pino com 'Aprimorar precisão do ponteiro' <b>Desativado</b>.</p>
+                </div>
+              </div>
+            `;
+          } else {
+            const dpiRec = 550 + Math.floor(rnd() * 80);
+            const toqueRec = 165 + Math.floor(rnd() * 25);
+            const sw = Math.min(window.screen.width, window.screen.height);
+            const dpiText = (sw >= 280 && sw <= 520)
+              ? `A menor largura atual do seu aparelho é de uns <b>${sw} dp</b>. Sugestão: <b>${Math.round(sw * 1.3)} dp</b> (+30%, mais seguro) ou <b>${Math.round(sw * 1.6)} dp</b> (+60%, mais agressivo). Anote o valor original antes de mudar.`
+              : 'Use a aba <b>Calc DPI</b> para calcular a menor largura a partir do DPI de fábrica do seu aparelho. Anote o valor original antes de mudar.';
+
+            botDiv.innerHTML = `
+              <div class="w-8 h-8 rounded-xl bg-green-500/20 border border-green-500/30 flex items-center justify-center text-sm flex-shrink-0">🤖</div>
+              <div class="bg-gray-800/90 border border-gray-700/50 p-4 rounded-2xl rounded-tl-none max-w-[88%] text-gray-200 space-y-3">
+                <div class="flex items-center justify-between border-b border-gray-700/60 pb-2">
+                  <span class="font-bold text-green-400">🤖 Configuração Recomendada (Android)</span>
+                  <span class="text-[10px] bg-green-500/10 text-green-400 border border-green-500/30 px-2 py-0.5 rounded">${modeType}</span>
+                </div>
+                <p class="text-xs text-gray-300"><b>Aparelho Detectado:</b> ${escapeHtml(targetDevice)}</p>
+                
+                <p class="text-[10px] text-yellow-400/80">⚠️ Valores estimados. Ajuste ao seu gosto; não são oficiais de nenhum jogador.</p>
+                <div class="grid grid-cols-2 gap-2 text-xs bg-gray-950/60 p-2.5 rounded-xl border border-gray-800">
+                  <div>🎯 <b>Geral:</b> ${geral}</div>
+                  <div>🔴 <b>Ponto Vermelho:</b> ${redDot}</div>
+                  <div>🔍 <b>Mira 2x:</b> ${mira2x}</div>
+                  <div>🔭 <b>Mira 4x:</b> ${mira4x}</div>
+                  <div>🎯 <b>AWM:</b> ${awm}</div>
+                </div>
+
+                <div class="text-xs space-y-1 bg-green-500/5 p-2.5 rounded-xl border border-green-500/20">
+                  <p class="font-bold text-green-400">📍 Onde Configurar Cada Item:</p>
+                  <p>1. <b>No Free Fire:</b> Vá em Configurações > Sensibilidade e ajuste os valores da lista acima (Escala 0-200).</p>
+                  <p>2. <b>No Android (Menor largura / DPI):</b> ${dpiText}</p>
+                  <p>3. <b>No COBRASIZE:</b> Ajuste o slider de Resposta de Toque no Painel em <b>${toqueRec} / 200</b>.</p>
+                </div>
+              </div>
+            `;
+          }
+        }
+
+        if (!isGreeting) {
+          const fireTip = selectedPlatform === 'pc'
+            ? 'No emulador, deixe o tiro no botão esquerdo do mouse e a mira em outro botão que seu dedo alcance sem esforço. Teste no treino e ajuste.'
+            : 'Deixe o botão de tiro grande (entre uns 70% e 100% no editor de layout do jogo), perto do canto onde o polegar alcança sem sair do lugar. De 2 a 3 dedos: um botão grande na direita. De 4 dedos: acrescente um segundo botão do lado esquerdo. Teste no treino e ajuste.';
+          botDiv.lastElementChild.insertAdjacentHTML('beforeend', `
+            <div class="text-xs space-y-1 bg-yellow-500/5 p-2.5 rounded-xl border border-yellow-500/20">
+              <p class="font-bold text-yellow-400">🔥 Botão de atirar (ponto de partida)</p>
+              <p>${fireTip}</p>
+              <p class="text-[10px] text-gray-500">Dica geral de jogadores, não uma regra: o melhor é o que funciona para a sua mão.</p>
+            </div>`);
+        }
+
+        chatBox.appendChild(botDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+        } catch (e) {
+          console.error(e);
+          showToast('Não consegui gerar a sugestão. Tente de novo.');
+        } finally {
+          iaBusy = false;
+        }
+      }, 700);
+    }
+
+    // ATIVAÇÃO (SESSÃO): não é salva, então ao fechar o app tudo volta a ficar desativado
+    let appActive = false;
+    let wakeLock = null;
+    let activeSince = 0;
+    let activeTimer = null;
+
+    function guardActive() {
+      if (appActive) return true;
+      showToast("⚠️ Ative o COBRASIZE no Painel para usar esta função.");
+      return false;
+    }
+
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
+      } catch (e) { wakeLock = null; }
+    }
+    function releaseWakeLock() {
+      try { if (wakeLock) wakeLock.release(); } catch (e) {}
+      wakeLock = null;
+    }
+
+    function renderActive() {
+      const on = appActive;
+      document.getElementById('active-dot').className = `w-2.5 h-2.5 rounded-full ${on ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`;
+      document.getElementById('active-text').innerText = on ? 'COBRASIZE ativo' : 'COBRASIZE inativo';
+      document.getElementById('active-card').className = `bg-gray-900/90 border ${on ? 'border-green-500/30' : 'border-red-500/30'} p-5 rounded-2xl flex items-center justify-between gap-4 shadow-xl`;
+      const btn = document.getElementById('btn-active');
+      btn.innerText = on ? '⏹ DESATIVAR' : '▶ ATIVAR';
+      btn.className = on
+        ? 'bg-gray-800 hover:bg-gray-700 text-gray-200 font-extrabold text-xs px-4 py-2.5 rounded-xl shadow-lg transition-all whitespace-nowrap'
+        : 'bg-green-500 hover:bg-green-400 text-black font-extrabold text-xs px-4 py-2.5 rounded-xl shadow-lg transition-all whitespace-nowrap';
+      ['touch-slider', 'gpu-mode', 'fps-mode'].forEach(id => { document.getElementById(id).disabled = !on; });
+      if (!on) document.getElementById('active-sub').innerText = 'Ative para liberar as funções. Ao fechar o app, tudo é desativado.';
+    }
+
+    function tickActive() {
+      const sec = Math.floor((Date.now() - activeSince) / 1000);
+      const mm = String(Math.floor(sec / 60)).padStart(2, '0');
+      const ss = String(sec % 60).padStart(2, '0');
+      document.getElementById('active-sub').innerText = `Ativo há ${mm}:${ss} • tela mantida ligada • sessão encerra ao fechar o app`;
+    }
+
+    async function setActive(on) {
+      appActive = on;
+      if (window.AndroidBridge) { try { AndroidBridge.setActive(on); } catch (e) {} }
+      clearInterval(activeTimer);
+      if (on) {
+        activeSince = Date.now();
+        activeTimer = setInterval(tickActive, 1000);
+        await requestWakeLock();
+        if (!appActive) releaseWakeLock();
+      } else {
+        releaseWakeLock();
+      }
+      renderActive();
+      if (on) tickActive();
+    }
+
+    function toggleActive() {
+      const next = !appActive;
+      setActive(next);
+      showToast(next ? "✅ COBRASIZE ativado." : "⏹️ COBRASIZE desativado.");
+    }
+
+    // Voltou para o app: reativa o bloqueio de tela. Fechou/descarregou: desativa tudo.
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && appActive) requestWakeLock();
+    });
+    window.addEventListener('pagehide', () => { if (!window.AndroidBridge) setActive(false); });
+
+    // TEMAS
+    const THEMES = [
+      { id: 'escuro', name: 'Escuro', bg: '#0b0f19', card: '#111827', accent: '#22c55e' },
+      { id: 'claro', name: 'Claro', bg: '#f3f4f6', card: '#ffffff', accent: '#22c55e' },
+      { id: 'amoled', name: 'AMOLED (preto)', bg: '#000000', card: '#0a0a0a', accent: '#22c55e' },
+      { id: 'azul', name: 'Azul', bg: '#0a1020', card: '#111827', accent: '#3b82f6' },
+      { id: 'roxo', name: 'Roxo', bg: '#100b1a', card: '#111827', accent: '#a855f7' },
+      { id: 'fogo', name: 'Fogo', bg: '#150e0a', card: '#111827', accent: '#f97316' }
+    ];
+
+    function applyTheme(id, silent) {
+      const theme = THEMES.find(t => t.id === id) || THEMES[0];
+      document.documentElement.setAttribute('data-theme', theme.id);
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', theme.bg);
+      store('theme', theme.id);
+      document.querySelectorAll('#theme-grid button').forEach(b => {
+        const on = b.dataset.theme === theme.id;
+        b.className = `p-3 rounded-xl text-left transition-all border-2 bg-gray-950 ${on ? 'border-green-500' : 'border-gray-800 hover:border-gray-600'}`;
+        b.setAttribute('aria-pressed', String(on));
+      });
+      if (!silent) showToast(`🎨 Tema ${theme.name} ativado.`);
+    }
+
+    function setupThemes() {
+      const grid = document.getElementById('theme-grid');
+      THEMES.forEach(t => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.dataset.theme = t.id;
+        btn.innerHTML = `
+          <div class="h-12 rounded-lg mb-2 flex items-center justify-center gap-1.5" style="background:${t.bg};border:1px solid rgba(128,128,128,.35)">
+            <span class="w-7 h-7 rounded-md" style="background:${t.card};border:1px solid rgba(128,128,128,.35)"></span>
+            <span class="w-3 h-3 rounded-full" style="background:${t.accent}"></span>
+          </div>
+          <span class="text-xs font-semibold text-gray-200">${t.name}</span>`;
+        btn.addEventListener('click', () => applyTheme(t.id, false));
+        grid.appendChild(btn);
+      });
+      applyTheme(load('theme') || 'escuro', true);
+    }
+
+    // BOTÕES DE INFORMAÇÃO (ⓘ)
+    const INFO = {
+      active: {
+        title: 'Ativar / Desativar',
+        does: 'Liga a sessão do COBRASIZE. Enquanto está ativo, as funções ficam liberadas e a tela do celular fica ligada. No app Android, aparece uma notificação com o botão Desativar.',
+        changes: 'Por si só, nada no sistema. Ao fechar o app, tudo volta a ficar desativado e os ajustes aplicados são desfeitos.'
+      },
+      platform: {
+        title: 'Plataforma e dispositivo',
+        does: 'Escolhe se as sugestões da IA são para Android ou para PC/emulador, e guarda o nome do seu aparelho (botão Salvar ao lado do campo).',
+        changes: 'Só o que fica salvo neste aparelho. Não altera o sistema nem o jogo.'
+      },
+      pcfields: {
+        title: 'Campos do PC',
+        does: 'O DPI do mouse aparece nas sugestões da IA para PC. Sensi Y e Sensi X servem para você anotar os valores que usa.',
+        changes: 'Nada além de aparecer nas sugestões. Não altera o emulador nem o Windows.'
+      },
+      slider: {
+        title: 'Resposta de toque',
+        does: 'Define em quanto tempo o Android entende um toque longo: de 500 ms com o slider em 0 até 250 ms em 200.',
+        changes: 'No app Android (com a permissão do ADB): a configuração "long_press_timeout" do sistema. Não muda a sensibilidade do jogo nem a velocidade do toque na tela. No navegador, só salva o valor.'
+      },
+      presets: {
+        title: 'Presets',
+        does: 'Capa Máximo coloca o slider em 185 e Equilibrado em 130. É só um atalho.',
+        changes: 'Só move o slider. O valor só vai para o sistema quando você toca em Aplicar.'
+      },
+      gpu: {
+        title: 'Modo de resposta GPU',
+        does: 'Define a velocidade das animações do Android: Turbo deixa em 0,25x e Estável em 0,5x. Economia não altera nada.',
+        changes: 'No app Android (com a permissão do ADB): window_animation_scale, transition_animation_scale e animator_duration_scale. Não mexe na GPU, no FPS do jogo nem em arquivos do jogo.'
+      },
+      fps: {
+        title: 'FPS / taxa visual',
+        does: 'Com 120/90 Hz, pede ao Android que use a taxa de atualização alta da tela. Com 60 Hz, não altera nada.',
+        changes: 'No app Android (com a permissão "Modificar configurações do sistema"): peak_refresh_rate e min_refresh_rate. Depende do aparelho e pode não ter efeito. Não muda o FPS dentro do jogo.'
+      },
+      apply: {
+        title: 'Aplicar otimização',
+        does: 'Salva os valores e, no app Android, aplica no sistema as mudanças de animação, toque longo e taxa de atualização.',
+        changes: 'As configurações do Android descritas acima. Tudo é desfeito ao desativar, fechar o app ou tocar em Restaurar. Se faltar permissão, o app avisa "Nada aplicado".'
+      },
+      save: {
+        title: 'Salvar',
+        does: 'Guarda no aparelho o slider, o modo GPU, o FPS e a calculadora de DPI. Também salva sozinho quando você muda um valor.',
+        changes: 'Nada no sistema.'
+      },
+      restore: {
+        title: 'Restaurar',
+        does: 'Volta o slider, o modo GPU e o FPS para os valores padrão e desfaz no Android o que o app tinha aplicado.',
+        changes: 'Devolve as configurações do sistema aos valores originais, que o app guarda antes de aplicar qualquer mudança.'
+      },
+      dpi: {
+        title: 'Calculadora de DPI',
+        does: 'Calcula a "Menor largura" sugerida: DPI de fábrica vezes o multiplicador (+30%, +60% ou +100%).',
+        changes: 'Nada. Só mostra o número. Quem altera é você, nas Opções do desenvolvedor do Android. Anote o valor original antes.'
+      },
+      scan: {
+        title: 'Scanner',
+        does: 'Mede a taxa de atualização da tela e o ping até o servidor da página (só com internet), e mostra a RAM e os núcleos da CPU que o aparelho informa.',
+        changes: 'Nada. É só leitura. A RAM aparece limitada a 8 GB e alguns aparelhos mostram N/D.'
+      },
+      ia: {
+        title: 'COBRA IA Sensi',
+        does: 'Gera uma sugestão de sensibilidade, botão de atirar e menor largura (DPI) a partir do seu aparelho e do texto digitado. Não pesquisa na internet nem no YouTube: os valores são estimados.',
+        changes: 'Nada. Só mostra valores para você ajustar manualmente.'
+      },
+      theme: {
+        title: 'Tema',
+        does: 'Muda as cores do app: Escuro, Claro, AMOLED (preto total), Azul, Roxo ou Fogo.',
+        changes: 'Só a aparência do app. A escolha fica salva neste aparelho. Não altera o sistema nem o jogo.'
+      },
+      vip: {
+        title: 'Código VIP',
+        does: 'Libera a Calc DPI e a COBRA IA. Você digita o código uma única vez: o acesso fica salvo neste aparelho.',
+        changes: 'Nada no sistema. Fica só um registro no app. Para remover, use o botão Bloquear VIP na aba VIP.'
+      }
+    };
+
+    function showInfo(key) {
+      const item = INFO[key];
+      if (!item) return;
+      document.getElementById('info-title').textContent = item.title;
+      document.getElementById('info-does').textContent = item.does;
+      document.getElementById('info-changes').textContent = item.changes;
+      document.getElementById('info-modal').classList.remove('hidden');
+    }
+    function closeInfo() {
+      document.getElementById('info-modal').classList.add('hidden');
+    }
+    function setupInfoButtons() {
+      document.querySelectorAll('[data-info]').forEach(el => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = 'i';
+        btn.setAttribute('aria-label', 'O que isso faz');
+        btn.className = 'inline-flex items-center justify-center w-[18px] h-[18px] ml-1.5 rounded-full border border-gray-600 text-gray-400 hover:text-green-400 hover:border-green-400 text-[11px] font-bold leading-none flex-shrink-0 align-middle';
+        btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); showInfo(el.dataset.info); });
+        el.replaceWith(btn);
+      });
+      document.getElementById('info-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'info-modal') closeInfo();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeInfo();
+      });
+    }
+
+    // INICIALIZAÇÃO
+    window.addEventListener('DOMContentLoaded', async () => {
+      const ua = navigator.userAgent;
+      const isDesktop = /Windows|Macintosh|CrOS|X11/.test(ua) && !/Android/.test(ua);
+      let detectedName = "Celular Android";
+      if (isDesktop) detectedName = "PC (BlueStacks / Emulador)";
+      else if (/iPhone|iPad/.test(ua)) detectedName = "Apple iPhone";
+      else if (/SM-|Samsung(?!Browser)/i.test(ua)) detectedName = "Samsung Galaxy";
+      else if (/Xiaomi|Redmi|POCO|MI \d/i.test(ua)) detectedName = "Xiaomi / POCO";
+      else if (/moto|Motorola/i.test(ua)) detectedName = "Motorola Moto";
+
+      savedDeviceName = load('device') || detectedName;
+      document.getElementById('user-device-input').value = savedDeviceName;
+      document.getElementById('device-auto-detected').innerText = `Detectado: ${detectedName}`;
+
+      setPlatform(load('platform') || (isDesktop ? 'pc' : 'android'), true);
+      loadSettings();
+      renderActive();
+      setupThemes();
+      setupInfoButtons();
+      if (window.AndroidBridge) {
+        document.getElementById('native-hint').classList.remove('hidden');
+        hideInstallBtn();
+      }
+      cobrasizeInitAuth();
+
+      ['touch-slider', 'gpu-mode', 'fps-mode', 'dpi-base', 'dpi-mult'].forEach(id =>
+        document.getElementById(id).addEventListener('change', () => saveSettings(false)));
+      document.getElementById('vip-code-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') validateVipCode();
+      });
+
+      // Refina o modelo do aparelho (assíncrono, só depois do app já estar funcionando)
+      try {
+        const info = await navigator.userAgentData?.getHighEntropyValues?.(['model']);
+        if (info && info.model) {
+          document.getElementById('device-auto-detected').innerText = `Detectado: ${info.model}`;
+          if (!load('device')) {
+            savedDeviceName = info.model;
+            document.getElementById('user-device-input').value = info.model;
+          }
+        }
+      } catch (e) {}
+    });
+  </script>
+</body>
+</html>
