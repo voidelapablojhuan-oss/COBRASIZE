@@ -18,7 +18,7 @@ object Tweaker {
 
     private fun prefs(c: Context) = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
     private fun hasSecure(c: Context) =
-        c.checkSelfPermission(Manifest.permission.WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED
+        c.packageManager.checkPermission(Manifest.permission.WRITE_SECURE_SETTINGS, c.packageName) == PackageManager.PERMISSION_GRANTED
 
     private fun backup(c: Context) {
         val p = prefs(c)
