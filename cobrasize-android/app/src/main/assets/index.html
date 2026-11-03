@@ -118,9 +118,9 @@
         <div>
           <div class="flex items-center gap-2">
             <h1 class="text-2xl font-extrabold tracking-tight text-white">COBRASIZE</h1>
-            <span class="bg-green-500/20 text-green-400 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-green-500/30">PRO v4.6 (APK Ready)</span>
+            <span class="bg-green-500/20 text-green-400 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-green-500/30">v1.0.2</span>
           </div>
-          <p class="text-xs text-gray-400 mt-0.5">Otimização de Tela, Resposta de Toque & IA Sensi 100% Anti-Ban</p>
+          <p class="text-xs text-gray-400 mt-0.5">Ferramentas e perfis personalizados para Free Fire</p>
         </div>
       </div>
       <div class="flex items-center gap-2">
@@ -151,6 +151,9 @@
       </button>
       <button onclick="switchTab('vip')" id="tab-vip" class="flex-1 min-w-[110px] py-2.5 px-4 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 text-yellow-400 hover:bg-gray-800">
         👑 VIP
+      </button>
+      <button onclick="switchTab('fftools')" id="tab-fftools" class="flex-1 min-w-[110px] py-2.5 px-4 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 text-gray-400 hover:text-white hover:bg-gray-800">
+        🐍 Ferramentas FF
       </button>
       <button onclick="switchTab('config')" id="tab-config" class="flex-1 min-w-[110px] py-2.5 px-4 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 text-gray-400 hover:text-white hover:bg-gray-800">
         ⚙️ Config
@@ -357,7 +360,7 @@
 
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div class="bg-gray-950 border border-gray-800 p-4 rounded-xl text-center">
-            <span class="text-xs text-gray-500 font-semibold uppercase">Ping Estimado</span>
+            <span class="text-xs text-gray-500 font-semibold uppercase">Ping estimado</span>
             <div id="scan-ping" class="text-2xl font-extrabold text-green-400 mt-1">-- ms</div>
           </div>
           <div class="bg-gray-950 border border-gray-800 p-4 rounded-xl text-center">
@@ -465,6 +468,108 @@
       </div>
     </section>
 
+    <!-- FERRAMENTAS EXTRAS FREE FIRE -->
+    <section id="content-fftools" class="hidden space-y-6">
+      <div class="bg-gray-900/90 border border-green-500/30 p-5 rounded-2xl space-y-4">
+        <div>
+          <h2 class="text-lg font-extrabold text-white">🎯 Gerador de sensibilidade por perfil</h2>
+          <p class="text-xs text-gray-400 mt-1">Cria um ponto de partida usando seu aparelho e seu estilo. Os números são estimativas, não configurações oficiais nem garantia de capa.</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label class="text-xs text-gray-300">Modelo do aparelho
+            <input id="ff-device" class="mt-1 w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white" placeholder="Ex.: Samsung A54">
+          </label>
+          <label class="text-xs text-gray-300">Memória RAM
+            <select id="ff-ram" class="mt-1 w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white">
+              <option value="2-4">2 a 4 GB</option><option value="6" selected>6 GB</option><option value="8+">8 GB ou mais</option>
+            </select>
+          </label>
+          <label class="text-xs text-gray-300">Taxa da tela
+            <select id="ff-refresh" class="mt-1 w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white">
+              <option value="60" selected>60 Hz</option><option value="90">90 Hz</option><option value="120">120 Hz ou mais</option><option value="unknown">Não sei</option>
+            </select>
+          </label>
+          <label class="text-xs text-gray-300">Quantos dedos você usa?
+            <select id="ff-fingers" class="mt-1 w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white">
+              <option value="2">2 dedos</option><option value="3">3 dedos</option><option value="4" selected>4 dedos</option><option value="5">5 dedos</option>
+            </select>
+          </label>
+          <label class="text-xs text-gray-300 sm:col-span-2">Seu estilo
+            <select id="ff-style" class="mt-1 w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white">
+              <option value="balanced">Equilibrado</option><option value="rush">Movimentação rápida</option><option value="precision">Mais precisão</option>
+            </select>
+          </label>
+        </div>
+        <button onclick="generateFFSensi()" class="w-full bg-green-500 hover:bg-green-400 text-black font-extrabold py-3 rounded-xl">⚡ GERAR MINHA SENSI</button>
+        <div id="ff-sensi-result" class="hidden bg-gray-950 border border-green-500/20 rounded-xl p-4 space-y-3">
+          <div class="flex items-center justify-between"><b class="text-green-400 text-sm">Sua sugestão</b><span class="text-[10px] text-gray-500">Escala 0–200</span></div>
+          <div id="ff-sensi-values" class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm text-white"></div>
+          <p id="ff-sensi-note" class="text-xs text-gray-400"></p>
+          <button onclick="copyFFSensi()" class="w-full bg-gray-800 hover:bg-gray-700 text-green-300 font-bold py-2.5 rounded-xl">📋 Copiar configuração</button>
+        </div>
+      </div>
+
+      <div class="bg-gray-900/90 border border-gray-800 p-5 rounded-2xl space-y-4">
+        <div>
+          <h2 class="text-lg font-extrabold text-white">🧩 Central de HUD e códigos</h2>
+          <p class="text-xs text-gray-400 mt-1">Guarde códigos de HUD e compartilhe com amigos. O COBRASIZE não aplica o código dentro do jogo: você cola manualmente no Free Fire, se o jogo aceitar.</p>
+        </div>
+        <input id="ff-hud-name" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white" placeholder="Nome do HUD (ex.: 4 dedos)">
+        <textarea id="ff-hud-code" rows="3" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white" placeholder="Cole aqui seu código de HUD"></textarea>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="saveFFHud()" class="bg-green-500 hover:bg-green-400 text-black font-bold py-2.5 rounded-xl">💾 Salvar HUD</button>
+          <button onclick="shareFFHud()" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 rounded-xl">📤 Compartilhar</button>
+        </div>
+        <div id="ff-hud-list" class="space-y-2"></div>
+      </div>
+
+      <div class="bg-gray-900/90 border border-gray-800 p-5 rounded-2xl space-y-4">
+        <div>
+          <h2 class="text-lg font-extrabold text-white">🛠️ Checklist de estabilidade</h2>
+          <p class="text-xs text-gray-400 mt-1">Marque o que já fez antes de jogar. As escolhas ficam salvas no aparelho.</p>
+        </div>
+        <div id="ff-performance-list" class="space-y-3 text-sm text-gray-200">
+          <label class="flex gap-3 items-start"><input type="checkbox" data-ff-check="graphics" class="mt-1 accent-green-500"><span><b>Gráficos no Suave</b><small class="block text-xs text-gray-500">A Garena recomenda reduzir a qualidade quando há travamentos.</small></span></label>
+          <label class="flex gap-3 items-start"><input type="checkbox" data-ff-check="apps" class="mt-1 accent-green-500"><span><b>Fechar apps que não vou usar</b><small class="block text-xs text-gray-500">Libera recursos que podem estar ocupados em segundo plano.</small></span></label>
+          <label class="flex gap-3 items-start"><input type="checkbox" data-ff-check="battery" class="mt-1 accent-green-500"><span><b>Desativar economia de bateria durante a partida</b><small class="block text-xs text-gray-500">O modo de economia pode limitar o desempenho.</small></span></label>
+          <label class="flex gap-3 items-start"><input type="checkbox" data-ff-check="heat" class="mt-1 accent-green-500"><span><b>Evitar jogar com o aparelho muito quente</b><small class="block text-xs text-gray-500">Se estiver aquecendo, faça uma pausa para esfriar.</small></span></label>
+          <label class="flex gap-3 items-start"><input type="checkbox" data-ff-check="updates" class="mt-1 accent-green-500"><span><b>Verificar atualizações do jogo e do Android</b><small class="block text-xs text-gray-500">Mantenha o sistema e o jogo atualizados.</small></span></label>
+        </div>
+        <div class="h-2 bg-gray-800 rounded-full overflow-hidden"><div id="ff-performance-progress" class="h-full bg-green-500" style="width:0%"></div></div>
+        <p id="ff-performance-count" class="text-xs text-gray-400">0 de 5 concluídos</p>
+        <button onclick="resetFFChecklist()" class="text-xs text-gray-400 underline">Zerar checklist</button>
+      </div>
+
+      <div class="bg-gray-900/90 border border-gray-800 p-5 rounded-2xl space-y-3">
+        <div>
+          <h2 class="text-lg font-extrabold text-white">📶 Diagnóstico de conexão</h2>
+          <p class="text-xs text-gray-400 mt-1">Mede o tempo de resposta até um serviço de teste. Não é o ping do servidor do Free Fire.</p>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-gray-950 rounded-xl p-3"><span class="text-xs text-gray-500">Resposta do teste</span><div id="ff-net-result" class="text-2xl font-extrabold text-green-400">--</div></div>
+          <div class="bg-gray-950 rounded-xl p-3"><span class="text-xs text-gray-500">Tipo de rede</span><div id="ff-net-type" class="text-lg font-bold text-white">--</div></div>
+        </div>
+        <p id="ff-net-advice" class="text-xs text-gray-400">Toque em testar para analisar a conexão disponível.</p>
+        <button onclick="testFFNetwork()" class="w-full bg-green-500 hover:bg-green-400 text-black font-extrabold py-3 rounded-xl">📡 TESTAR CONEXÃO</button>
+      </div>
+
+      <div class="bg-gray-900/90 border border-gray-800 p-5 rounded-2xl space-y-4">
+        <div>
+          <h2 class="text-lg font-extrabold text-white">🏁 Treino rápido de mira</h2>
+          <p class="text-xs text-gray-400 mt-1">Uma rotina curta para praticar no modo de treinamento do próprio jogo.</p>
+        </div>
+        <div id="ff-training-list" class="space-y-3 text-sm text-gray-200">
+          <label class="flex gap-3 items-start"><input type="checkbox" data-ff-drill="warmup" class="mt-1 accent-green-500"><span><b>2 min — Aquecimento</b><small class="block text-xs text-gray-500">Faça movimentos leves e se acostume com os controles.</small></span></label>
+          <label class="flex gap-3 items-start"><input type="checkbox" data-ff-drill="tracking" class="mt-1 accent-green-500"><span><b>2 min — Acompanhar alvos</b><small class="block text-xs text-gray-500">Pratique manter a mira acompanhando alvos de treino.</small></span></label>
+          <label class="flex gap-3 items-start"><input type="checkbox" data-ff-drill="flick" class="mt-1 accent-green-500"><span><b>2 min — Controle de movimento</b><small class="block text-xs text-gray-500">Treine movimentos curtos e controlados, sem acelerar além do confortável.</small></span></label>
+          <label class="flex gap-3 items-start"><input type="checkbox" data-ff-drill="review" class="mt-1 accent-green-500"><span><b>2 min — Revisão</b><small class="block text-xs text-gray-500">Veja o que ficou confortável e ajuste uma configuração por vez.</small></span></label>
+        </div>
+        <p id="ff-training-progress" class="text-xs text-gray-400">0 de 4 etapas concluídas</p>
+        <button onclick="resetFFTraining()" class="text-xs text-gray-400 underline">Reiniciar treino</button>
+      </div>
+      <p class="text-[10px] text-gray-500 text-center">As ferramentas são auxiliares. O COBRASIZE não altera arquivos do Free Fire, não automatiza comandos e não promete FPS ou mira melhores.</p>
+    </section>
+
     <!-- MODAL DE INFORMAÇÃO (ⓘ) -->
     <div id="info-modal" role="dialog" aria-modal="true" aria-labelledby="info-title" class="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center p-4 hidden">
       <div class="bg-gray-900 border border-green-500/30 rounded-2xl p-5 max-w-md w-full space-y-3 text-left shadow-2xl">
@@ -519,7 +624,7 @@
 
   <!-- FOOTER -->
   <footer class="text-center py-4 text-xs text-gray-600 border-t border-gray-900">
-    COBRASIZE © 2026 — Otimização Anti-Ban de Sensibilidade e Resposta de Toque
+    COBRASIZE © 2026 — Ferramentas auxiliares para Free Fire
     <p class="mt-1 text-gray-500">Feito por <b class="text-green-400">wcobra</b> e <b class="text-green-400">IA</b></p>
   </footer>
 
@@ -684,7 +789,7 @@
 
     // ALTERNÂNCIA DE ABAS
     function switchTab(tabName) {
-      const tabs = ['painel', 'calcdpi', 'scan', 'ia', 'vip', 'config'];
+      const tabs = ['painel', 'calcdpi', 'scan', 'ia', 'vip', 'fftools', 'config'];
       tabs.forEach(t => {
         const btn = document.getElementById(`tab-${t}`);
         const content = document.getElementById(`content-${t}`);
@@ -1320,6 +1425,184 @@
       applyTheme(load('theme') || 'escuro', true);
     }
 
+    // FERRAMENTAS FREE FIRE — perfis locais e utilitários seguros
+    let lastFFSensi = null;
+
+    function clampFF(n) { return Math.max(0, Math.min(200, Math.round(n))); }
+
+    function generateFFSensi() {
+      const device = document.getElementById('ff-device').value.trim() || savedDeviceName || 'Seu aparelho';
+      const ram = document.getElementById('ff-ram').value;
+      const refresh = document.getElementById('ff-refresh').value;
+      const fingers = Number(document.getElementById('ff-fingers').value);
+      const style = document.getElementById('ff-style').value;
+      let general = 164;
+      if (ram === '2-4') general += 12;
+      if (ram === '8+') general -= 3;
+      if (style === 'rush') general += 8;
+      if (style === 'precision') general -= 8;
+      if (fingers >= 4) general += 2;
+      if (refresh === '120') general -= 3;
+      if (refresh === '60') general += 2;
+      const profile = {
+        device: device,
+        general: clampFF(general),
+        redDot: clampFF(general - 3),
+        scope2x: clampFF(general - 14),
+        scope4x: clampFF(general - 29),
+        sniper: clampFF(general - 76),
+        freeLook: clampFF(general - 17),
+        ram: ram,
+        refresh: refresh,
+        fingers: fingers,
+        style: style
+      };
+      lastFFSensi = profile;
+      const fields = [['Geral',profile.general],['Ponto vermelho',profile.redDot],['Mira 2x',profile.scope2x],['Mira 4x',profile.scope4x],['AWM',profile.sniper],['Olhadinha',profile.freeLook]];
+      document.getElementById('ff-sensi-values').innerHTML = fields.map(function(item) {
+        return '<div class="bg-gray-900 rounded-lg p-2"><span class="block text-[10px] text-gray-500">' + item[0] + '</span><b>' + item[1] + '</b></div>';
+      }).join('');
+      document.getElementById('ff-sensi-note').textContent = 'Perfil estimado para ' + device + ', ' + fingers + ' dedos. Teste no treinamento e ajuste de 3 a 5 pontos por vez. Não existe sensibilidade universal.';
+      document.getElementById('ff-sensi-result').classList.remove('hidden');
+      store('ff_last_sensi', JSON.stringify(profile));
+    }
+
+    function copyFFText(value) {
+      if (!value) { showToast('Nada para copiar.'); return; }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(value).then(function(){ showToast('Copiado!'); }).catch(function(){ fallbackFFCopy(value); });
+      } else fallbackFFCopy(value);
+    }
+    function fallbackFFCopy(value) {
+      const area = document.createElement('textarea');
+      area.value = value;
+      area.style.position = 'fixed';
+      area.style.opacity = '0';
+      document.body.appendChild(area);
+      area.select();
+      try { document.execCommand('copy'); showToast('Copiado!'); } catch(e) { showToast('Não foi possível copiar automaticamente.'); }
+      area.remove();
+    }
+    function copyFFSensi() {
+      if (!lastFFSensi) {
+        try { lastFFSensi = JSON.parse(load('ff_last_sensi') || 'null'); } catch(e) {}
+      }
+      if (!lastFFSensi) return showToast('Gere uma sensibilidade primeiro.');
+      const p = lastFFSensi;
+      copyFFText('COBRASIZE — ' + p.device + '\nGeral: ' + p.general + '\nPonto vermelho: ' + p.redDot + '\nMira 2x: ' + p.scope2x + '\nMira 4x: ' + p.scope4x + '\nAWM: ' + p.sniper + '\nOlhadinha: ' + p.freeLook);
+    }
+
+    function getFFHudList() {
+      try { return JSON.parse(load('ff_hud_list') || '[]'); } catch(e) { return []; }
+    }
+    function renderFFHudList() {
+      const list = getFFHudList();
+      const target = document.getElementById('ff-hud-list');
+      if (!target) return;
+      if (!list.length) { target.innerHTML = '<p class="text-xs text-gray-500">Nenhum código salvo ainda.</p>'; return; }
+      target.innerHTML = list.map(function(item, index) {
+        return '<div class="flex items-center justify-between gap-2 bg-gray-950 border border-gray-800 rounded-xl p-3"><div class="min-w-0"><b class="block text-xs text-white truncate">' + escapeHtml(item.name) + '</b><span class="block text-[10px] text-gray-500 truncate">' + escapeHtml(item.code) + '</span></div><div class="flex gap-1 flex-shrink-0"><button onclick="loadFFHud(' + index + ')" class="text-xs bg-gray-800 px-2 py-1.5 rounded-lg">Abrir</button><button onclick="copyFFHud(' + index + ')" class="text-xs bg-green-500/20 text-green-300 px-2 py-1.5 rounded-lg">Copiar</button><button onclick="deleteFFHud(' + index + ')" class="text-xs bg-red-500/10 text-red-300 px-2 py-1.5 rounded-lg">×</button></div></div>';
+      }).join('');
+    }
+    function saveFFHud() {
+      const name = document.getElementById('ff-hud-name').value.trim() || 'Meu HUD';
+      const code = document.getElementById('ff-hud-code').value.trim();
+      if (!code) return showToast('Cole um código de HUD primeiro.');
+      const list = getFFHudList();
+      list.unshift({name:name,code:code,createdAt:Date.now()});
+      store('ff_hud_list', JSON.stringify(list.slice(0,12)));
+      document.getElementById('ff-hud-name').value = '';
+      document.getElementById('ff-hud-code').value = '';
+      renderFFHudList();
+      showToast('HUD salvo neste aparelho!');
+    }
+    function loadFFHud(index) {
+      const item = getFFHudList()[index];
+      if (!item) return;
+      document.getElementById('ff-hud-name').value = item.name;
+      document.getElementById('ff-hud-code').value = item.code;
+      showToast('Código carregado no campo.');
+    }
+    function copyFFHud(index) {
+      const item = getFFHudList()[index];
+      if (item) copyFFText(item.name + '\n' + item.code);
+    }
+    function deleteFFHud(index) {
+      const list = getFFHudList();
+      list.splice(index,1);
+      store('ff_hud_list', JSON.stringify(list));
+      renderFFHudList();
+      showToast('HUD removido.');
+    }
+    function shareFFHud() {
+      const name = document.getElementById('ff-hud-name').value.trim() || 'Meu HUD';
+      const code = document.getElementById('ff-hud-code').value.trim();
+      if (!code) return showToast('Cole ou abra um código antes de compartilhar.');
+      const text = name + '\nCódigo: ' + code;
+      if (navigator.share) navigator.share({title:'Meu HUD do Free Fire',text:text}).catch(function(){});
+      else copyFFText(text);
+    }
+
+    function updateFFChecklist() {
+      const checks = Array.from(document.querySelectorAll('[data-ff-check]'));
+      let done = 0;
+      checks.forEach(function(el){ if(el.checked) done++; });
+      document.getElementById('ff-performance-progress').style.width = (done / checks.length * 100) + '%';
+      document.getElementById('ff-performance-count').textContent = done + ' de ' + checks.length + ' concluídos';
+      store('ff_performance_checks', JSON.stringify(checks.map(function(el){return el.checked;})));
+    }
+    function resetFFChecklist() {
+      document.querySelectorAll('[data-ff-check]').forEach(function(el){el.checked=false;});
+      updateFFChecklist();
+    }
+
+    async function testFFNetwork() {
+      const result = document.getElementById('ff-net-result');
+      const advice = document.getElementById('ff-net-advice');
+      const info = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      document.getElementById('ff-net-type').textContent = info ? (info.effectiveType || info.type || 'Detectada') : 'Não informado';
+      result.textContent = '...';
+      advice.textContent = 'Testando a resposta de rede...';
+      const start = performance.now();
+      const controller = new AbortController();
+      const timeout = setTimeout(function(){controller.abort();}, 4500);
+      try {
+        await fetch('https://www.gstatic.com/generate_204?cobrasize=' + Date.now(), {mode:'no-cors',cache:'no-store',signal:controller.signal});
+        const ms = Math.round(performance.now() - start);
+        result.textContent = ms + ' ms';
+        advice.textContent = ms < 100 ? 'Resposta rápida neste teste. Isso não garante o mesmo ping dentro da partida.' : ms < 250 ? 'Resposta intermediária. Se houver lag, teste outra rede e evite downloads durante a partida.' : 'Resposta lenta neste teste. Verifique o Wi-Fi ou sinal móvel e pause downloads.';
+      } catch(e) {
+        result.textContent = 'Falhou';
+        advice.textContent = 'Não foi possível alcançar o serviço de teste. Verifique a internet e tente novamente.';
+      } finally { clearTimeout(timeout); }
+    }
+
+    function updateFFTraining() {
+      const checks = Array.from(document.querySelectorAll('[data-ff-drill]'));
+      const done = checks.filter(function(el){return el.checked;}).length;
+      document.getElementById('ff-training-progress').textContent = done + ' de ' + checks.length + ' etapas concluídas';
+      store('ff_training_checks', JSON.stringify(checks.map(function(el){return el.checked;})));
+    }
+    function resetFFTraining() {
+      document.querySelectorAll('[data-ff-drill]').forEach(function(el){el.checked=false;});
+      updateFFTraining();
+    }
+    function initFFTools() {
+      const device = document.getElementById('ff-device');
+      if (device && !device.value) device.value = savedDeviceName || '';
+      try {
+        const perf = JSON.parse(load('ff_performance_checks') || '[]');
+        document.querySelectorAll('[data-ff-check]').forEach(function(el,i){el.checked=!!perf[i];});
+        const training = JSON.parse(load('ff_training_checks') || '[]');
+        document.querySelectorAll('[data-ff-drill]').forEach(function(el,i){el.checked=!!training[i];});
+      } catch(e) {}
+      document.querySelectorAll('[data-ff-check]').forEach(function(el){el.onchange=updateFFChecklist;});
+      document.querySelectorAll('[data-ff-drill]').forEach(function(el){el.onchange=updateFFTraining;});
+      updateFFChecklist();
+      updateFFTraining();
+      renderFFHudList();
+    }
+
     // BOTÕES DE INFORMAÇÃO (ⓘ)
     const INFO = {
       active: {
@@ -1448,6 +1731,7 @@
       renderActive();
       setupThemes();
       setupInfoButtons();
+      initFFTools();
       if (window.AndroidBridge) {
         document.getElementById('native-hint').classList.remove('hidden');
         hideInstallBtn();
