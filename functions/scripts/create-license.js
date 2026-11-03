@@ -5,7 +5,7 @@ const { initializeApp } = require("firebase-admin/app");
 const { getFirestore, Timestamp } = require("firebase-admin/firestore");
 const { createHash } = require("node:crypto");
 
-const code = String(process.argv[2] || "").trim().toUpperCase().replace(/\\s+/g, "");
+const code = String(process.argv[2] || "").trim().toUpperCase().replace(/\s+/g, "");
 const expiryArg = process.argv[3] || "never";
 
 if (code.length < 10 || code.length > 80) {
