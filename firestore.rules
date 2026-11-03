@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Licenças e permissões VIP só podem ser lidas/escritas pelo Admin SDK
+    // dentro das Cloud Functions. O cliente não recebe acesso direto.
+    match /licenses/{licenseId} {
+      allow read, write: if false;
+    }
+    match /vipEntitlements/{userId} {
+      allow read, write: if false;
+    }
+    match /vipAttempts/{userId} {
+      allow read, write: if false;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
