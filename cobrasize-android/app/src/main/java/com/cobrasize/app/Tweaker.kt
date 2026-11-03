@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.provider.Settings
+import android.os.Build
 
 /**
  * Ajustes reais de sistema, todos reversíveis. Os valores originais são salvos antes
@@ -56,8 +57,16 @@ object Tweaker {
         if (fps >= 90) {
             if (Settings.System.canWrite(c)) {
                 try {
-                    REFRESH_KEYS.forEach { Settings.System.putFloat(cr, it, fps.toFloat()) }
-                    done += "taxa de atualização ${fps}Hz (depende do aparelho)"
+                    val wm = c.getSystemService(Context.WINDOW_SERVICE) as android.view.WindowManager
+                    val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) c.display else wm.defaultDisplay
+                    val supported = display?.supportedModes
+                        ?.map { it.refreshRate }
+                        ?.filter { it > 0f && it <= fps.toFloat() + 0.5f }
+                        ?.maxOrNull()
+                    val current = display?.refreshRate ?: 60f
+                    val targetRate = supported ?: minOf(current, fps.toFloat())
+                    REFRESH_KEYS.forEach { Settings.System.putFloat(cr, it, targetRate) }
+                    done += "taxa de atualização ${targetRate.toInt()}Hz (modo compatível detectado)"
                 } catch (e: Exception) {
                     missing += "Modificar configurações do sistema"
                 }
