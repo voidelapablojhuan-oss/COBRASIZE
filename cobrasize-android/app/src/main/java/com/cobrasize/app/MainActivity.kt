@@ -1,19 +1,13 @@
 package com.cobrasize.app
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.net.Uri
-import android.provider.Settings
-import android.content.ClipboardManager
-import android.content.ClipData
 import android.widget.Toast
 import android.view.WindowManager
 import android.webkit.JavascriptInterface
@@ -63,49 +57,6 @@ class MainActivity : Activity() {
         }
 
         @JavascriptInterface
-        fun getPermissionStatus(): String {
-            val secure = packageManager.checkPermission(
-                Manifest.permission.WRITE_SECURE_SETTINGS, packageName
-            ) == PackageManager.PERMISSION_GRANTED
-            val writeSettings = Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.System.canWrite(this@MainActivity)
-            return JSONObject()
-                .put("secureGranted", secure)
-                .put("writeSettingsGranted", writeSettings)
-                .put("androidVersion", Build.VERSION.SDK_INT)
-                .toString()
-        }
-
-        @JavascriptInterface
-        fun openWriteSettings(): Boolean {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return false
-            return try {
-                val intent = Intent(
-                    Settings.ACTION_MANAGE_WRITE_SETTINGS,
-                    Uri.parse("package:$packageName")
-                )
-                startActivity(intent)
-                true
-            } catch (e: Exception) {
-                false
-            }
-        }
-
-        @JavascriptInterface
-        fun copyAdbCommand(): Boolean {
-            return try {
-                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                clipboard.setPrimaryClip(ClipData.newPlainText(
-                    "Comando COBRASIZE",
-                    "adb shell pm grant com.cobrasize.app android.permission.WRITE_SECURE_SETTINGS"
-                ))
-                Toast.makeText(this@MainActivity, "Comando ADB copiado!", Toast.LENGTH_SHORT).show()
-                true
-            } catch (e: Exception) {
-                false
-            }
-        }
-
-        @JavascriptInterface
         fun restoreTweaks() {
             try {
                 Tweaker.restore(this@MainActivity)
@@ -146,11 +97,6 @@ class MainActivity : Activity() {
             registerReceiver(stoppedReceiver, filter)
         }
         receiverRegistered = true
-    }
-
-    override fun onResume() {
-        super.onResume()
-        webView?.post { webView?.evaluateJavascript("refreshPermissionStatus()", null) }
     }
 
     // Fechar o app (voltar / deslizar) encerra o serviço e desativa tudo
