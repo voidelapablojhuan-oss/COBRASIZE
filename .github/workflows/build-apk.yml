@@ -5,6 +5,10 @@ on:
   push:
     branches: [main, master]
 
+concurrency:
+  group: cobrasize-apk-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -15,6 +19,19 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+
+      - name: Reutilizar assinatura de teste entre versões
+        id: debug-keystore
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: cobrasize-debug-keystore-v1
+
+      - name: Criar assinatura de teste na primeira compilação
+        if: steps.debug-keystore.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/.android
+          keytool -genkeypair -v -keystore ~/.android/debug.keystore -storepass android -keypass android -alias androiddebugkey -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 10000
 
       - name: Configurar Android SDK
         uses: android-actions/setup-android@v3
