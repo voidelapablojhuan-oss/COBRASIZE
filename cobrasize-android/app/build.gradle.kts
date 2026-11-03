@@ -11,8 +11,8 @@ android {
         applicationId = "com.cobrasize.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 4
-        versionName = "1.0.2"
+        versionCode = 5
+        versionName = "1.0.3"
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
