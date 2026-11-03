@@ -798,7 +798,7 @@
       document.getElementById('btn-vip-lock').classList.remove('hidden');
     }
 
-    function lockVip() {
+    function lockVip(silent = false) {
       isVipUnlocked = false;
       document.getElementById('vip-status-text').innerHTML = 'Status VIP: <b class="text-gray-300">Bloqueado</b>';
       document.getElementById('vip-status-badge').className = "bg-gray-900 border border-gray-800 px-4 py-2 rounded-xl flex items-center gap-2 text-xs text-gray-400";
@@ -808,8 +808,10 @@
       document.getElementById('ia-unlocked-view').classList.add('hidden');
       document.getElementById('btn-vip-lock').classList.add('hidden');
       document.getElementById('vip-code-input').value = '';
-      showToast('🔒 VIP bloqueado neste aparelho.');
-      switchTab('painel');
+      if (!silent) {
+        showToast('🔒 VIP bloqueado neste aparelho.');
+        switchTab('painel');
+      }
     }
 
     // A validação acontece exclusivamente em Cloud Functions. O app nunca decide
@@ -1389,8 +1391,8 @@
       },
       vip: {
         title: 'Código VIP',
-        does: 'Libera a Calc DPI e a COBRA IA. Você digita o código uma única vez: o acesso fica salvo neste aparelho.',
-        changes: 'Nada no sistema. Fica só um registro no app. Para remover, use o botão Bloquear VIP na aba VIP.'
+        does: 'Libera a Calc DPI e a COBRA IA após validar a licença no servidor.',
+        changes: 'O acesso VIP fica vinculado à conta Firebase e pode ser reconhecido em outros aparelhos.'
       }
     };
 
