@@ -118,7 +118,7 @@
         <div>
           <div class="flex items-center gap-2">
             <h1 class="text-2xl font-extrabold tracking-tight text-white">COBRASIZE</h1>
-            <span class="bg-green-500/20 text-green-400 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-green-500/30">v1.0.2</span>
+            <span class="bg-green-500/20 text-green-400 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-green-500/30">v1.0.4</span>
           </div>
           <p class="text-xs text-gray-400 mt-0.5">Ferramentas e perfis personalizados para Free Fire</p>
         </div>
@@ -1196,6 +1196,8 @@
 
         const botDiv = document.createElement('div');
         botDiv.className = 'flex items-start space-x-2';
+        // Disponível para os ramos de geração e de pesquisa da sensibilidade.
+        const targetDevice = savedDeviceName || (selectedPlatform === 'pc' ? "Emulador PC (BlueStacks/LDPlayer)" : "Smartphone Android");
 
         if (isGreeting) {
           botDiv.innerHTML = `
@@ -1213,7 +1215,6 @@
           `;
         } else {
           // Gerar Sensi Personalizada Dinâmica (Android vs PC)
-          const targetDevice = savedDeviceName || (selectedPlatform === 'pc' ? "Emulador PC (BlueStacks/LDPlayer)" : "Smartphone Android");
           const rnd = seededRandom(hashSeed(`${selectedPlatform}|${targetDevice}|${text.toLowerCase()}`));
           const modeType = rnd() > 0.5 ? "Modo Padrão (0 a 200)" : "Modo Alto (0 a 200)";
           
