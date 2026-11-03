@@ -5,8 +5,8 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
-import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 
@@ -24,29 +24,38 @@ class ActiveService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_STOP) {
             sendBroadcast(Intent(ACTION_STOPPED).setPackage(packageName))
-            stopForeground(STOP_FOREGROUND_REMOVE)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) stopForeground(STOP_FOREGROUND_REMOVE)
+            else stopForeground(true)
             stopSelf()
             return START_NOT_STICKY
         }
 
-        val manager = getSystemService(NotificationManager::class.java)
-        manager.createNotificationChannel(
-            NotificationChannel(CHANNEL_ID, "COBRASIZE ativo", NotificationManager.IMPORTANCE_LOW)
-        )
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            manager.createNotificationChannel(
+                NotificationChannel(CHANNEL_ID, "COBRASIZE ativo", NotificationManager.IMPORTANCE_LOW)
+            )
+        }
 
+        val immutableFlag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
         val stopPending = PendingIntent.getService(
             this, 0,
             Intent(this, ActiveService::class.java).setAction(ACTION_STOP),
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            immutableFlag or PendingIntent.FLAG_UPDATE_CURRENT
         )
         val openPending = PendingIntent.getActivity(
             this, 0,
             Intent(this, MainActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT),
-            PendingIntent.FLAG_IMMUTABLE
+            immutableFlag or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val notification = Notification.Builder(this, CHANNEL_ID)
+        val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Notification.Builder(this, CHANNEL_ID)
+        } else {
+            Notification.Builder(this).setPriority(Notification.PRIORITY_LOW)
+        }
+        val notification = builder
             .setContentTitle("COBRASIZE ativo")
             .setContentText("Toque para abrir. Use Desativar para encerrar.")
             .setSmallIcon(android.R.drawable.ic_media_play)
@@ -56,11 +65,7 @@ class ActiveService : Service() {
             .build()
 
         try {
-            if (Build.VERSION.SDK_INT >= 34) {
-                startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
-            } else {
-                startForeground(NOTIFICATION_ID, notification)
-            }
+            startForeground(NOTIFICATION_ID, notification)
         } catch (e: Exception) {
             stopSelf()
         }
